@@ -52,7 +52,7 @@
 <div class="panel" id="panel-settings">
   <div class="card">
     <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
-    <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη">
+    <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
     <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
     <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
   </div>
@@ -71,7 +71,7 @@
     <input type="text" id="f-name" placeholder="π.χ. Γιάννης Παπαδόπουλος">
 
     <label>Διεύθυνση *</label>
-    <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη">
+    <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
 
     <label>Τηλέφωνο</label>
     <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
@@ -291,7 +291,39 @@ function saveApiKey() {
   }
   localStorage.setItem(API_KEY_STORAGE, val);
   showToast('Αποθηκεύτηκε το API key');
+  loadPlacesScript();
 }
+
+// ---------- Places Autocomplete ----------
+let placesScriptLoaded = false;
+
+function loadPlacesScript() {
+  const apiKey = loadApiKey();
+  if (!apiKey || placesScriptLoaded) return;
+  placesScriptLoaded = true;
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&callback=initAutocompletes&loading=async`;
+  script.async = true;
+  document.head.appendChild(script);
+}
+
+window.initAutocompletes = function() {
+  const opts = { fields: ['formatted_address'], componentRestrictions: { country: 'gr' } };
+
+  const baseInput = document.getElementById('base-address');
+  const baseAC = new google.maps.places.Autocomplete(baseInput, opts);
+  baseAC.addListener('place_changed', () => {
+    const p = baseAC.getPlace();
+    if (p && p.formatted_address) baseInput.value = p.formatted_address;
+  });
+
+  const addInput = document.getElementById('f-address');
+  const addAC = new google.maps.places.Autocomplete(addInput, opts);
+  addAC.addListener('place_changed', () => {
+    const p = addAC.getPlace();
+    if (p && p.formatted_address) addInput.value = p.formatted_address;
+  });
+};
 
 function renderApiKeyField() {
   const key = loadApiKey();
@@ -431,7 +463,13 @@ async function generateRoute() {
 
     const route = data.routes && data.routes[0];
     if (!route) {
-      renderResultState(`<div class="state-box">Δεν βρέθηκε διαδρομή για αυτές τις διευθύνσεις.</div>`);
+      renderResultState(`
+        <div class="state-box">
+          <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
+          Δεν βρέθηκε διαδρομή για αυτές τις διευθύνσεις.
+          <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+        </div>
+      `);
       return;
     }
 
@@ -532,6 +570,7 @@ function escapeHtml(str) {
 // ---------- Αρχικό render ----------
 renderList();
 renderApiKeyField();
+loadPlacesScript();
 
 // ---------- Service Worker ----------
 if ('serviceWorker' in navigator) {
