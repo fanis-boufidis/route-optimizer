@@ -571,3 +571,74 @@ body:has(#footer-bar.visible) #toast.show {
     transition-duration: 0.01ms !important;
   }
 }
+/* ============================================================
+   Responsive Adjustments (Tablet & Desktop)
+   ============================================================ */
+
+@media (min-width: 768px) {
+  :root {
+    /* Μεγαλώνουμε το πλάτος της εφαρμογής για μεγάλες οθόνες */
+    --max-width: 860px; 
+    --text-base: 1rem;
+  }
+
+  body {
+    padding-top: 40px; /* Λίγος περισσότερος αέρας πάνω-πάνω */
+  }
+
+  /* Κεντράρισμα του Header και των Tabs για πιο ωραία Desktop εμφάνιση */
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    justify-content: center;
+  }
+
+  .tabs {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 32px;
+  }
+
+  /* Μετατροπή της λίστας διευθύνσεων σε πλέγμα (Grid) 2 στηλών! */
+  #address-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .addr-item {
+    margin-bottom: 0; /* Το κενό το αναλαμβάνει πλέον το gap του grid */
+    height: 100%; /* Για να έχουν όλα τα κουτάκια το ίδιο ύψος */
+  }
+
+  /* Οι φόρμες (προσθήκη/import) να μην απλώνουν υπερβολικά */
+  .card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Προσαρμογή του footer bar στο νέο πλάτος */
+  #footer-bar {
+    padding: 16px 32px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    /* Ακόμα μεγαλύτερο πλάτος για οθόνες υπολογιστών */
+    --max-width: 1000px; 
+  }
+
+  /* Σε μεγάλες οθόνες, 3 στήλες στις διευθύνσεις */
+  #address-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
