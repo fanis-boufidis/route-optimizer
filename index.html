@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Routes">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-512.png">
 
 <style>
   * { box-sizing: border-box; }
@@ -83,6 +83,24 @@
     margin-bottom: 10px;
   }
 
+  .addr-item.selected { background: #e8f0fe; }
+
+  #footer-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid #dadce0;
+    padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+    display: none; align-items: center; gap: 12px;
+    max-width: 560px; margin: 0 auto;
+  }
+  #footer-bar.visible { display: flex; }
+  #footer-count { font-size: 13px; font-weight: 600; color: #5f6368; flex-shrink: 0; }
+  #footer-count.warn { color: #b06000; }
+  #footer-count.ok { color: #188038; }
+  #footer-bar button.primary { margin-top: 0; width: auto; flex: 1; padding: 12px 16px; }
+  body { padding-bottom: 80px; }
+
+  select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #dadce0; border-radius: 8px; margin-top: 4px; }
+
   #toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: #323232; color: white; padding: 10px 20px; border-radius: 8px;
@@ -101,14 +119,26 @@
   <button class="tab-btn active" data-tab="list">Λίστα</button>
   <button class="tab-btn" data-tab="add">+ Προσθήκη</button>
   <button class="tab-btn" data-tab="import">Import</button>
+  <button class="tab-btn" data-tab="settings">⚙️</button>
 </div>
 
 <!-- ==================== TAB: ΛΙΣΤΑ ==================== -->
 <div class="panel active" id="panel-list">
+  <div id="base-badge" class="hint" style="margin-bottom:10px;"></div>
   <div id="count-badge" class="count-badge">0 διευθύνσεις</div>
   <div id="address-list"></div>
   <div id="empty-state" style="display:none;">
     Δεν έχεις προσθέσει ακόμα διευθύνσεις.<br>Πήγαινε στο "+ Προσθήκη" ή "Import".
+  </div>
+</div>
+
+<!-- ==================== TAB: ΡΥΘΜΙΣΕΙΣ ==================== -->
+<div class="panel" id="panel-settings">
+  <div class="card">
+    <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
+    <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη">
+    <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
+    <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
   </div>
 </div>
 
@@ -145,6 +175,11 @@
     </p>
     <button class="primary" onclick="importBulk()">Εισαγωγή Διευθύνσεων</button>
   </div>
+</div>
+
+<div id="footer-bar">
+  <span id="footer-count">0 επιλεγμένες</span>
+  <button class="primary" id="route-btn" onclick="generateRoute()">Δημιούργησε Διαδρομή</button>
 </div>
 
 <div id="toast"></div>
@@ -265,6 +300,101 @@ function deleteAddress(id) {
   showToast('🗑️ Διαγράφηκε');
 }
 
+// ---------- Ρυθμίσεις: Διεύθυνση Βάσης ----------
+const BASE_KEY = 'base_address_v1';
+
+function loadBaseAddress() {
+  return localStorage.getItem(BASE_KEY) || '';
+}
+
+function saveBaseAddress() {
+  const val = document.getElementById('base-address').value.trim();
+  if (!val) {
+    showToast('Βάλε μια διεύθυνση βάσης');
+    return;
+  }
+  localStorage.setItem(BASE_KEY, val);
+  showToast('✅ Αποθηκεύτηκε η αφετηρία');
+  renderBaseBadge();
+}
+
+function renderBaseBadge() {
+  const base = loadBaseAddress();
+  const badge = document.getElementById('base-badge');
+  const input = document.getElementById('base-address');
+  if (base) {
+    badge.textContent = '🏠 Αφετηρία: ' + base;
+    input.value = base;
+  } else {
+    badge.textContent = '⚠️ Δεν έχεις ορίσει αφετηρία — πήγαινε στις Ρυθμίσεις (⚙️)';
+  }
+}
+
+// ---------- Επιλογή διευθύνσεων ημέρας ----------
+// Το κλειδί περιέχει τη σημερινή ημερομηνία ώστε η επιλογή να "μηδενίζει" αυτόματα κάθε νέα μέρα
+function todayKey() {
+  const d = new Date();
+  return 'selection_' + d.toISOString().slice(0, 10);
+}
+
+function loadSelection() {
+  try {
+    const raw = localStorage.getItem(todayKey());
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveSelection(set) {
+  localStorage.setItem(todayKey(), JSON.stringify([...set]));
+}
+
+let selectedIds = loadSelection();
+
+function toggleSelection(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  saveSelection(selectedIds);
+  updateFooterBar();
+  // Οπτική ένδειξη στη γραμμή
+  const row = document.querySelector(`.addr-item[data-row-id="${id}"]`);
+  if (row) row.classList.toggle('selected', checked);
+}
+
+function updateFooterBar() {
+  const bar = document.getElementById('footer-bar');
+  const countEl = document.getElementById('footer-count');
+  const n = selectedIds.size;
+
+  if (n === 0) {
+    bar.classList.remove('visible');
+    return;
+  }
+  bar.classList.add('visible');
+
+  countEl.textContent = n + ' επιλεγμένες';
+  countEl.className = (n >= 5 && n <= 10) ? 'ok' : 'warn';
+  if (n < 5 || n > 10) {
+    countEl.textContent += ' (προτεινόμενο: 5-10)';
+  }
+}
+
+// Placeholder για τώρα — στη Φάση 5 θα καλεί πραγματικά το Google Routes API
+function generateRoute() {
+  const base = loadBaseAddress();
+  if (!base) {
+    showToast('⚠️ Όρισε πρώτα αφετηρία στις Ρυθμίσεις (⚙️)');
+    return;
+  }
+  const addresses = loadAddresses();
+  const selected = addresses.filter(a => selectedIds.has(a.id));
+
+  let msg = 'Αφετηρία: ' + base + '\n\nΕπιλεγμένες στάσεις:\n';
+  msg += selected.map((a, i) => (i + 1) + '. ' + a.name + ' — ' + a.address).join('\n');
+  msg += '\n\n(Στη Φάση 5 αυτό θα στέλνεται αυτόματα στο Google Routes API)';
+  alert(msg);
+}
+
 // ---------- Render λίστας ----------
 function renderList() {
   const addresses = loadAddresses();
@@ -273,17 +403,20 @@ function renderList() {
   const badgeEl = document.getElementById('count-badge');
 
   badgeEl.textContent = addresses.length + ' διευθύνσεις';
+  renderBaseBadge();
 
   if (addresses.length === 0) {
     listEl.innerHTML = '';
     emptyEl.style.display = 'block';
+    updateFooterBar();
     return;
   }
   emptyEl.style.display = 'none';
 
   listEl.innerHTML = addresses.map(a => `
-    <div class="addr-item">
-      <input type="checkbox" data-id="${a.id}">
+    <div class="addr-item ${selectedIds.has(a.id) ? 'selected' : ''}" data-row-id="${a.id}">
+      <input type="checkbox" data-id="${a.id}" ${selectedIds.has(a.id) ? 'checked' : ''}
+             onchange="toggleSelection('${a.id}', this.checked)">
       <div class="addr-info">
         <div class="addr-name">${escapeHtml(a.name)}</div>
         <div class="addr-address">${escapeHtml(a.address)}</div>
@@ -295,6 +428,8 @@ function renderList() {
       </div>
     </div>
   `).join('');
+
+  updateFooterBar();
 }
 
 function escapeHtml(str) {
