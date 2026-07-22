@@ -6,128 +6,44 @@
 <title>Route Optimizer</title>
 
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#1a73e8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0d0d0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Routes">
 <link rel="apple-touch-icon" href="./icons/icon-512.png">
-
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: system-ui, -apple-system, sans-serif;
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 16px;
-    background: #f8f9fa;
-    color: #202124;
-  }
-  h1 { color: #1a73e8; font-size: 22px; margin-bottom: 4px; }
-  .subtitle { color: #5f6368; font-size: 13px; margin-top: 0; margin-bottom: 16px; }
-
-  /* Tabs */
-  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-  .tab-btn {
-    flex: 1; padding: 10px; border: none; border-radius: 8px;
-    background: #e8eaed; color: #5f6368; font-size: 14px; font-weight: 600;
-    cursor: pointer;
-  }
-  .tab-btn.active { background: #1a73e8; color: white; }
-
-  .panel { display: none; }
-  .panel.active { display: block; }
-
-  .card {
-    background: white; border-radius: 10px; padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 12px;
-  }
-
-  label { font-size: 13px; font-weight: 600; color: #5f6368; display: block; margin-top: 10px; }
-  input[type=text], textarea {
-    width: 100%; padding: 10px; font-size: 15px; border: 1px solid #dadce0;
-    border-radius: 8px; margin-top: 4px; font-family: inherit;
-  }
-  textarea { resize: vertical; }
-
-  button.primary {
-    width: 100%; margin-top: 14px; padding: 12px; font-size: 15px; font-weight: 600;
-    background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer;
-  }
-  button.primary:active { background: #1558b0; }
-
-  .hint { font-size: 12px; color: #80868b; margin-top: 6px; line-height: 1.4; }
-
-  /* Address list */
-  .addr-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    background: white; border-radius: 10px; padding: 12px 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 8px;
-  }
-  .addr-item input[type=checkbox] { margin-top: 3px; width: 20px; height: 20px; flex-shrink: 0; }
-  .addr-info { flex: 1; min-width: 0; }
-  .addr-name { font-weight: 600; font-size: 15px; }
-  .addr-address { font-size: 13px; color: #5f6368; margin-top: 2px; }
-  .addr-meta { font-size: 12px; color: #80868b; margin-top: 2px; }
-  .addr-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .icon-btn {
-    background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px;
-    color: #80868b;
-  }
-  .icon-btn.delete { color: #d93025; }
-
-  #empty-state { text-align: center; color: #80868b; padding: 30px 0; font-size: 14px; }
-
-  .count-badge {
-    display: inline-block; background: #e8f0fe; color: #1a73e8;
-    font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px;
-    margin-bottom: 10px;
-  }
-
-  .addr-item.selected { background: #e8f0fe; }
-
-  #footer-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-top: 1px solid #dadce0;
-    padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
-    display: none; align-items: center; gap: 12px;
-    max-width: 560px; margin: 0 auto;
-  }
-  #footer-bar.visible { display: flex; }
-  #footer-count { font-size: 13px; font-weight: 600; color: #5f6368; flex-shrink: 0; }
-  #footer-count.warn { color: #b06000; }
-  #footer-count.ok { color: #188038; }
-  #footer-bar button.primary { margin-top: 0; width: auto; flex: 1; padding: 12px 16px; }
-  body { padding-bottom: 80px; }
-
-  select { width: 100%; padding: 10px; font-size: 15px; border: 1px solid #dadce0; border-radius: 8px; margin-top: 4px; }
-
-  #toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: #323232; color: white; padding: 10px 20px; border-radius: 8px;
-    font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    max-width: 90%; text-align: center;
-  }
-  #toast.show { opacity: 1; }
-</style>
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
-<h1>📍 Route Optimizer</h1>
-<p class="subtitle">Address Book — Φάση 3</p>
+<header class="page-header">
+  <h1>
+    <span class="icon icon-lg" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+    Route Optimizer
+  </h1>
+  <p class="subtitle">Address Book — Φάση 3</p>
+</header>
 
 <div class="tabs">
   <button class="tab-btn active" data-tab="list">Λίστα</button>
   <button class="tab-btn" data-tab="add">+ Προσθήκη</button>
   <button class="tab-btn" data-tab="import">Import</button>
-  <button class="tab-btn" data-tab="settings">⚙️</button>
+  <button class="tab-btn tab-btn--icon" data-tab="settings" aria-label="Ρυθμίσεις">
+    <span class="icon icon-md" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+  </button>
 </div>
 
 <!-- ==================== TAB: ΛΙΣΤΑ ==================== -->
 <div class="panel active" id="panel-list">
-  <div id="base-badge" class="hint" style="margin-bottom:10px;"></div>
+  <div id="base-badge"></div>
   <div id="count-badge" class="count-badge">0 διευθύνσεις</div>
   <div id="address-list"></div>
   <div id="empty-state" style="display:none;">
+    <div class="empty-icon" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    </div>
     Δεν έχεις προσθέσει ακόμα διευθύνσεις.<br>Πήγαινε στο "+ Προσθήκη" ή "Import".
   </div>
 </div>
@@ -187,6 +103,18 @@
 <script>
 const STORAGE_KEY = 'addresses_v1';
 
+const ICONS = {
+  home: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9 20v-6h6v6"/></svg>',
+  alert: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  phone: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+  notes: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>',
+  trash: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+};
+
+function icon(name, size) {
+  return `<span class="icon icon-${size}" aria-hidden="true">${ICONS[name]}</span>`;
+}
+
 function loadAddresses() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -244,7 +172,7 @@ function addSingleAddress() {
   document.getElementById('f-phone').value = '';
   document.getElementById('f-notes').value = '';
 
-  showToast('✅ Προστέθηκε: ' + name);
+  showToast('Προστέθηκε: ' + name);
   renderList();
 }
 
@@ -283,7 +211,7 @@ function importBulk() {
   saveAddresses(addresses);
   document.getElementById('import-text').value = '';
 
-  let msg = `✅ Εισήχθησαν ${added} διευθύνσεις`;
+  let msg = `Εισήχθησαν ${added} διευθύνσεις`;
   if (skipped > 0) msg += ` (παραλήφθηκαν ${skipped} χωρίς όνομα/διεύθυνση)`;
   showToast(msg);
 
@@ -297,7 +225,7 @@ function deleteAddress(id) {
   const addresses = loadAddresses().filter(a => a.id !== id);
   saveAddresses(addresses);
   renderList();
-  showToast('🗑️ Διαγράφηκε');
+  showToast('Διαγράφηκε');
 }
 
 // ---------- Ρυθμίσεις: Διεύθυνση Βάσης ----------
@@ -314,7 +242,7 @@ function saveBaseAddress() {
     return;
   }
   localStorage.setItem(BASE_KEY, val);
-  showToast('✅ Αποθηκεύτηκε η αφετηρία');
+  showToast('Αποθηκεύτηκε η αφετηρία');
   renderBaseBadge();
 }
 
@@ -323,10 +251,12 @@ function renderBaseBadge() {
   const badge = document.getElementById('base-badge');
   const input = document.getElementById('base-address');
   if (base) {
-    badge.textContent = '🏠 Αφετηρία: ' + base;
+    badge.innerHTML = icon('home', 'md') + '<span><span class="badge-label">Αφετηρία:</span> ' + escapeHtml(base) + '</span>';
+    badge.classList.add('base-set');
     input.value = base;
   } else {
-    badge.textContent = '⚠️ Δεν έχεις ορίσει αφετηρία — πήγαινε στις Ρυθμίσεις (⚙️)';
+    badge.innerHTML = icon('alert', 'md') + '<span>Δεν έχεις ορίσει αφετηρία — πήγαινε στις Ρυθμίσεις</span>';
+    badge.classList.remove('base-set');
   }
 }
 
@@ -383,7 +313,7 @@ function updateFooterBar() {
 function generateRoute() {
   const base = loadBaseAddress();
   if (!base) {
-    showToast('⚠️ Όρισε πρώτα αφετηρία στις Ρυθμίσεις (⚙️)');
+    showToast('Όρισε πρώτα αφετηρία στις Ρυθμίσεις');
     return;
   }
   const addresses = loadAddresses();
@@ -420,11 +350,11 @@ function renderList() {
       <div class="addr-info">
         <div class="addr-name">${escapeHtml(a.name)}</div>
         <div class="addr-address">${escapeHtml(a.address)}</div>
-        ${a.phone ? `<div class="addr-meta">📞 ${escapeHtml(a.phone)}</div>` : ''}
-        ${a.notes ? `<div class="addr-meta">📝 ${escapeHtml(a.notes)}</div>` : ''}
+        ${a.phone ? `<div class="addr-meta">${icon('phone', 'sm')}${escapeHtml(a.phone)}</div>` : ''}
+        ${a.notes ? `<div class="addr-meta">${icon('notes', 'sm')}${escapeHtml(a.notes)}</div>` : ''}
       </div>
       <div class="addr-actions">
-        <button class="icon-btn delete" onclick="deleteAddress('${a.id}')">✕</button>
+        <button class="icon-btn delete" onclick="deleteAddress('${a.id}')" aria-label="Διαγραφή">${icon('trash', 'sm')}</button>
       </div>
     </div>
   `).join('');
