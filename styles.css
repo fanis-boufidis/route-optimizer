@@ -778,3 +778,32 @@ body:has(#footer-bar.visible) #toast.show {
 .pac-item-query { color: var(--text); }
 .pac-matched { color: var(--text); }
 .pac-icon { filter: invert(0.7); }
+
+/* --- Custom file upload button --- */
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px 22px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.file-upload-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+.file-upload-btn:active {
+  transform: scale(0.98);
+}
