@@ -56,6 +56,12 @@
     <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
     <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
   </div>
+  <div class="card">
+    <label>Google Maps API Key *</label>
+    <input type="text" id="api-key" placeholder="Το API key σου">
+    <p class="hint">Το ίδιο key που δοκίμασες στο test αρχείο. Αποθηκεύεται μόνο τοπικά στο κινητό σου.</p>
+    <button class="primary" onclick="saveApiKey()">Αποθήκευση Key</button>
+  </div>
 </div>
 
 <!-- ==================== TAB: ΠΡΟΣΘΗΚΗ ΜΙΑ-ΜΙΑ ==================== -->
@@ -93,6 +99,14 @@
   </div>
 </div>
 
+<!-- ==================== ΑΠΟΤΕΛΕΣΜΑ ΔΙΑΔΡΟΜΗΣ ==================== -->
+<div class="panel" id="panel-result">
+  <button class="icon-btn result-back" onclick="closeResult()" aria-label="Πίσω">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+  </button>
+  <div id="result-content"></div>
+</div>
+
 <div id="footer-bar">
   <span id="footer-count">0 επιλεγμένες</span>
   <button class="primary" id="route-btn" onclick="generateRoute()">Δημιούργησε Διαδρομή</button>
@@ -108,7 +122,9 @@ const ICONS = {
   alert: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
   phone: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
   notes: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>',
-  trash: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+  trash: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  external: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  errorIcon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
 };
 
 function icon(name, size) {
@@ -260,6 +276,28 @@ function renderBaseBadge() {
   }
 }
 
+// ---------- Ρυθμίσεις: API Key ----------
+const API_KEY_STORAGE = 'api_key_v1';
+
+function loadApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE) || '';
+}
+
+function saveApiKey() {
+  const val = document.getElementById('api-key').value.trim();
+  if (!val) {
+    showToast('Βάλε το API key σου');
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE, val);
+  showToast('Αποθηκεύτηκε το API key');
+}
+
+function renderApiKeyField() {
+  const key = loadApiKey();
+  if (key) document.getElementById('api-key').value = key;
+}
+
 // ---------- Επιλογή διευθύνσεων ημέρας ----------
 // Το κλειδί περιέχει τη σημερινή ημερομηνία ώστε η επιλογή να "μηδενίζει" αυτόματα κάθε νέα μέρα
 function todayKey() {
@@ -309,20 +347,143 @@ function updateFooterBar() {
   }
 }
 
-// Placeholder για τώρα — στη Φάση 5 θα καλεί πραγματικά το Google Routes API
-function generateRoute() {
+// ---------- Δημιουργία βέλτιστης διαδρομής (Google Routes API) ----------
+function openResult() {
+  document.getElementById('panel-result').classList.add('active');
+}
+
+function closeResult() {
+  document.getElementById('panel-result').classList.remove('active');
+}
+
+function renderResultState(html) {
+  document.getElementById('result-content').innerHTML = html;
+}
+
+function buildMapsUrl(base, orderedStops) {
+  const origin = encodeURIComponent(base);
+  const destination = encodeURIComponent(base); // κυκλική διαδρομή: γυρνάμε στην αφετηρία
+  const waypoints = orderedStops.map(a => encodeURIComponent(a.address)).join('|');
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
+}
+
+async function generateRoute() {
   const base = loadBaseAddress();
+  const apiKey = loadApiKey();
+
   if (!base) {
     showToast('Όρισε πρώτα αφετηρία στις Ρυθμίσεις');
     return;
   }
+  if (!apiKey) {
+    showToast('Όρισε πρώτα το API key στις Ρυθμίσεις');
+    return;
+  }
+
   const addresses = loadAddresses();
   const selected = addresses.filter(a => selectedIds.has(a.id));
 
-  let msg = 'Αφετηρία: ' + base + '\n\nΕπιλεγμένες στάσεις:\n';
-  msg += selected.map((a, i) => (i + 1) + '. ' + a.name + ' — ' + a.address).join('\n');
-  msg += '\n\n(Στη Φάση 5 αυτό θα στέλνεται αυτόματα στο Google Routes API)';
-  alert(msg);
+  if (selected.length === 0) {
+    showToast('Επίλεξε τουλάχιστον 1 διεύθυνση');
+    return;
+  }
+
+  openResult();
+  renderResultState(`
+    <div class="state-box">
+      <div class="spinner"></div>
+      Υπολογισμός βέλτιστης διαδρομής…
+    </div>
+  `);
+
+  const body = {
+    origin: { address: base },
+    destination: { address: base },
+    intermediates: selected.map(a => ({ address: a.address })),
+    travelMode: "DRIVE",
+    optimizeWaypointOrder: true
+  };
+
+  try {
+    const res = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.optimizedIntermediateWaypointIndex'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errMsg = (data.error && data.error.message) || 'Άγνωστο σφάλμα';
+      renderResultState(`
+        <div class="state-box">
+          <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
+          Κάτι πήγε στραβά.<br>${escapeHtml(errMsg)}
+          <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+        </div>
+      `);
+      return;
+    }
+
+    const route = data.routes && data.routes[0];
+    if (!route) {
+      renderResultState(`<div class="state-box">Δεν βρέθηκε διαδρομή για αυτές τις διευθύνσεις.</div>`);
+      return;
+    }
+
+    const order = route.optimizedIntermediateWaypointIndex || selected.map((_, i) => i);
+    const orderedStops = order.map(i => selected[i]);
+
+    const durationMin = Math.round(parseInt(route.duration) / 60);
+    const distanceKm = (route.distanceMeters / 1000).toFixed(1);
+    const mapsUrl = buildMapsUrl(base, orderedStops);
+
+    renderResultState(`
+      <h1 style="margin-bottom:18px;">Βέλτιστη Διαδρομή</h1>
+      <div class="result-summary">
+        <div class="result-stat">
+          <div class="result-stat-value">${distanceKm} km</div>
+          <div class="result-stat-label">Απόσταση</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-value">${durationMin} λεπτά</div>
+          <div class="result-stat-label">Διάρκεια</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-value">${orderedStops.length}</div>
+          <div class="result-stat-label">Στάσεις</div>
+        </div>
+      </div>
+
+      <a class="btn-secondary" style="background:var(--text); color:var(--bg); border-color:var(--text);" href="${mapsUrl}" target="_blank" rel="noopener">
+        ${icon('external', 'sm')} Άνοιγμα στο Google Maps
+      </a>
+
+      <p class="hint" style="margin:16px 0 10px;">Σειρά στάσεων (αφετηρία → κάθε στάση → επιστροφή):</p>
+
+      ${orderedStops.map((a, i) => `
+        <div class="result-stop">
+          <div class="result-stop-num">${i + 1}</div>
+          <div class="result-stop-info">
+            <div class="result-stop-name">${escapeHtml(a.name)}</div>
+            <div class="result-stop-address">${escapeHtml(a.address)}</div>
+          </div>
+        </div>
+      `).join('')}
+    `);
+
+  } catch (err) {
+    renderResultState(`
+      <div class="state-box">
+        <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
+        Σφάλμα δικτύου: ${escapeHtml(err.message)}
+      </div>
+    `);
+  }
 }
 
 // ---------- Render λίστας ----------
@@ -370,6 +531,7 @@ function escapeHtml(str) {
 
 // ---------- Αρχικό render ----------
 renderList();
+renderApiKeyField();
 
 // ---------- Service Worker ----------
 if ('serviceWorker' in navigator) {
