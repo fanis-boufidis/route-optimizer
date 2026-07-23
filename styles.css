@@ -4,19 +4,19 @@
    ============================================================ */
 
 :root {
-  --bg:             #0d0d0d;
-  --surface:        #1a1a1a;
-  --surface-raised: #222222;
-  --surface-hover:  #2a2a2a;
-  --surface-active: #333333;
+  --bg:             #121214;
+  --surface:        #1c1c1f;
+  --surface-raised: #232327;
+  --surface-hover:  #2b2b30;
+  --surface-active: #35353b;
 
-  --text:           #f0f0f0;
-  --text-secondary: #a3a3a3;
-  --text-muted:     #737373;
+  --text:           #e4e4e6;
+  --text-secondary: #9a9aa0;
+  --text-muted:     #6f6f76;
 
-  --border:         #333333;
-  --border-strong:  #444444;
-  --border-focus:   #888888;
+  --border:         #303035;
+  --border-strong:  #404046;
+  --border-focus:   #7a7a82;
 
   --radius-sm:      6px;
   --radius-md:      10px;
