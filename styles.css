@@ -762,6 +762,7 @@ body:has(#footer-bar.visible) #toast.show {
 
 /* --- Google Places Autocomplete dropdown (dark theme override) --- */
 .pac-container {
+  z-index: 9999 !important;
   background: var(--surface-raised);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
@@ -806,4 +807,28 @@ body:has(#footer-bar.visible) #toast.show {
 
 .file-upload-btn:active {
   transform: scale(0.98);
+}
+
+/* --- Filter toggle button --- */
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.filter-toggle:hover { background: var(--surface-hover); }
+.filter-toggle.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
 }
