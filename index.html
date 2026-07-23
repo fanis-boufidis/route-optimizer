@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="el">
 <head>
 <meta charset="UTF-8">
@@ -103,7 +103,14 @@
     <label>Διεύθυνση *</label>
     <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
     <div id="f-map" class="map-picker"></div>
-    <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
+    <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
+
+    <label class="checkbox-row" id="f-exit-toggle-row" style="display:none;">
+      <input type="checkbox" id="f-exit-toggle" onchange="toggleExitPicker(this.checked)">
+      <span>Ορισμός ξεχωριστής εξόδου</span>
+    </label>
+    <div id="f-exit-map" class="map-picker"></div>
+    <p class="map-picker-hint" id="f-exit-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή έξοδο.</p>
 
     <label>Τηλέφωνο</label>
     <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
@@ -232,6 +239,7 @@ function editAddress(id) {
 
   editingId = id;
   fCoords = (a.lat != null && a.lng != null) ? { lat: a.lat, lng: a.lng } : null;
+  fExitCoords = (a.exitLat != null && a.exitLng != null) ? { lat: a.exitLat, lng: a.exitLng } : null;
 
   document.getElementById('f-name').value = a.name;
   document.getElementById('f-address').value = a.address;
@@ -245,12 +253,19 @@ function editAddress(id) {
 
   if (fCoords && window.google && window.google.maps) {
     showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
+    document.getElementById('f-exit-toggle-row').style.display = 'flex';
+
+    if (fExitCoords) {
+      document.getElementById('f-exit-toggle').checked = true;
+      showMapPicker('f-exit-map', 'f-exit-map-hint', fExitCoords, (c) => { fExitCoords = c; });
+    }
   }
 }
 
 function cancelEdit() {
   editingId = null;
   fCoords = null;
+  fExitCoords = null;
   document.getElementById('f-name').value = '';
   document.getElementById('f-address').value = '';
   document.getElementById('f-phone').value = '';
@@ -259,6 +274,10 @@ function cancelEdit() {
   document.getElementById('add-submit-btn').textContent = 'Προσθήκη Διεύθυνσης';
   document.getElementById('f-map').classList.remove('visible');
   document.getElementById('f-map-hint').style.display = 'none';
+  document.getElementById('f-exit-toggle-row').style.display = 'none';
+  document.getElementById('f-exit-toggle').checked = false;
+  document.getElementById('f-exit-map').classList.remove('visible');
+  document.getElementById('f-exit-map-hint').style.display = 'none';
 }
 
 function addSingleAddress() {
@@ -280,7 +299,9 @@ function addSingleAddress() {
       addresses[idx] = {
         ...addresses[idx], name, address, phone, notes,
         lat: fCoords ? fCoords.lat : null,
-        lng: fCoords ? fCoords.lng : null
+        lng: fCoords ? fCoords.lng : null,
+        exitLat: fExitCoords ? fExitCoords.lat : null,
+        exitLng: fExitCoords ? fExitCoords.lng : null
       };
     }
     saveAddresses(addresses);
@@ -291,13 +312,20 @@ function addSingleAddress() {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       name, address, phone, notes,
       lat: fCoords ? fCoords.lat : null,
-      lng: fCoords ? fCoords.lng : null
+      lng: fCoords ? fCoords.lng : null,
+      exitLat: fExitCoords ? fExitCoords.lat : null,
+      exitLng: fExitCoords ? fExitCoords.lng : null
     });
     saveAddresses(addresses);
     showToast('Προστέθηκε: ' + name);
     fCoords = null;
+    fExitCoords = null;
     document.getElementById('f-map').classList.remove('visible');
     document.getElementById('f-map-hint').style.display = 'none';
+    document.getElementById('f-exit-toggle-row').style.display = 'none';
+    document.getElementById('f-exit-toggle').checked = false;
+    document.getElementById('f-exit-map').classList.remove('visible');
+    document.getElementById('f-exit-map-hint').style.display = 'none';
   }
 
   document.getElementById('f-name').value = '';
@@ -618,6 +646,21 @@ function loadPlacesScript() {
 const pickerMaps = {}; // { containerId: { map, marker } }
 let fCoords = null;
 let baseCoords = null;
+let fExitCoords = null;
+
+function toggleExitPicker(checked) {
+  const map = document.getElementById('f-exit-map');
+  const hint = document.getElementById('f-exit-map-hint');
+  if (checked) {
+    const start = fExitCoords || fCoords;
+    if (start) showMapPicker('f-exit-map', 'f-exit-map-hint', start, (c) => { fExitCoords = c; });
+    fExitCoords = fExitCoords || start;
+  } else {
+    map.classList.remove('visible');
+    hint.style.display = 'none';
+    fExitCoords = null;
+  }
+}
 
 function showMapPicker(containerId, hintId, coords, onChange) {
   const container = document.getElementById(containerId);
@@ -665,6 +708,7 @@ window.initAutocompletes = function() {
     if (p && p.geometry && p.geometry.location) {
       fCoords = { lat: p.geometry.location.lat(), lng: p.geometry.location.lng() };
       showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
+      document.getElementById('f-exit-toggle-row').style.display = 'flex';
     }
   });
 };
@@ -757,7 +801,17 @@ function locationToParam(obj) {
 function buildMapsUrl(base, orderedStops) {
   const origin = encodeURIComponent(locationToParam(base));
   const destination = encodeURIComponent(locationToParam(base)); // κυκλική διαδρομή: γυρνάμε στην αφετηρία
-  const waypoints = orderedStops.map(a => encodeURIComponent(locationToParam(a))).join('|');
+
+  // Κάθε στάση γίνεται [είσοδος, έξοδος] σαν πραγματικά, ξεχωριστά waypoints στη σειρά
+  const waypointParams = [];
+  orderedStops.forEach(a => {
+    waypointParams.push(locationToParam(a));
+    if (a.exitLat != null && a.exitLng != null) {
+      waypointParams.push(`${a.exitLat},${a.exitLng}`);
+    }
+  });
+  const waypoints = waypointParams.map(encodeURIComponent).join('|');
+
   return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
 }
 
@@ -878,6 +932,11 @@ async function generateRoute() {
           <div class="result-stop-info">
             <div class="result-stop-name">${escapeHtml(a.name)}</div>
             <div class="result-stop-address">${escapeHtml(a.address)}</div>
+            ${(a.exitLat != null && a.exitLng != null) ? `
+              <a class="exit-link" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/search/?api=1&query=${a.exitLat},${a.exitLng}">
+                + Στάση εξόδου (ήδη στη διαδρομή)
+              </a>` : ''}
           </div>
         </div>
       `).join('')}
