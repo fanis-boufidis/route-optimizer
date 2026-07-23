@@ -893,3 +893,15 @@ body:has(#footer-bar.visible) #toast.show {
   cursor: pointer;
 }
 .select-actions button:hover { background: var(--surface-hover); }
+
+/* --- Filter row: sort toggle + select actions μαζί --- */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.filter-row .filter-toggle {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
