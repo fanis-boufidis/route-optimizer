@@ -941,3 +941,20 @@ body:has(#footer-bar.visible) #toast.show {
   margin-bottom: 0;
   white-space: nowrap;
 }
+
+/* --- Mini map picker (ακριβής τοποθεσία με draggable pin) --- */
+.map-picker {
+  display: none;
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.map-picker.visible { display: block; }
+.map-picker-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 6px;
+}

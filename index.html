@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="el">
 <head>
 <meta charset="UTF-8">
@@ -60,6 +60,8 @@
   <div class="card">
     <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
     <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
+    <div id="base-map" class="map-picker"></div>
+    <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
     <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
     <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
   </div>
@@ -100,6 +102,8 @@
 
     <label>Διεύθυνση *</label>
     <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
+    <div id="f-map" class="map-picker"></div>
+    <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
 
     <label>Τηλέφωνο</label>
     <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
@@ -213,6 +217,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'list') renderList();
+    if (btn.dataset.tab === 'settings' && baseCoords && window.google && window.google.maps) {
+      showMapPicker('base-map', 'base-map-hint', baseCoords, (c) => { baseCoords = c; });
+    }
   });
 });
 
@@ -224,6 +231,8 @@ function editAddress(id) {
   if (!a) return;
 
   editingId = id;
+  fCoords = (a.lat != null && a.lng != null) ? { lat: a.lat, lng: a.lng } : null;
+
   document.getElementById('f-name').value = a.name;
   document.getElementById('f-address').value = a.address;
   document.getElementById('f-phone').value = a.phone || '';
@@ -233,16 +242,23 @@ function editAddress(id) {
   document.getElementById('add-submit-btn').textContent = 'Αποθήκευση Αλλαγών';
 
   document.querySelector('.tab-btn[data-tab="add"]').click();
+
+  if (fCoords && window.google && window.google.maps) {
+    showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
+  }
 }
 
 function cancelEdit() {
   editingId = null;
+  fCoords = null;
   document.getElementById('f-name').value = '';
   document.getElementById('f-address').value = '';
   document.getElementById('f-phone').value = '';
   document.getElementById('f-notes').value = '';
   document.getElementById('edit-banner').style.display = 'none';
   document.getElementById('add-submit-btn').textContent = 'Προσθήκη Διεύθυνσης';
+  document.getElementById('f-map').classList.remove('visible');
+  document.getElementById('f-map-hint').style.display = 'none';
 }
 
 function addSingleAddress() {
@@ -261,7 +277,11 @@ function addSingleAddress() {
   if (editingId) {
     const idx = addresses.findIndex(a => a.id === editingId);
     if (idx !== -1) {
-      addresses[idx] = { ...addresses[idx], name, address, phone, notes };
+      addresses[idx] = {
+        ...addresses[idx], name, address, phone, notes,
+        lat: fCoords ? fCoords.lat : null,
+        lng: fCoords ? fCoords.lng : null
+      };
     }
     saveAddresses(addresses);
     showToast('Ενημερώθηκε: ' + name);
@@ -269,10 +289,15 @@ function addSingleAddress() {
   } else {
     addresses.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name, address, phone, notes
+      name, address, phone, notes,
+      lat: fCoords ? fCoords.lat : null,
+      lng: fCoords ? fCoords.lng : null
     });
     saveAddresses(addresses);
     showToast('Προστέθηκε: ' + name);
+    fCoords = null;
+    document.getElementById('f-map').classList.remove('visible');
+    document.getElementById('f-map-hint').style.display = 'none';
   }
 
   document.getElementById('f-name').value = '';
@@ -515,7 +540,15 @@ function toggleTheme() {
 const BASE_KEY = 'base_address_v1';
 
 function loadBaseAddress() {
-  return localStorage.getItem(BASE_KEY) || '';
+  const raw = localStorage.getItem(BASE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch (e) {
+    // Παλιά μορφή: ήταν απλό string, το μετατρέπουμε
+  }
+  return { address: raw, lat: null, lng: null };
 }
 
 function saveBaseAddress() {
@@ -524,7 +557,11 @@ function saveBaseAddress() {
     showToast('Βάλε μια διεύθυνση βάσης');
     return;
   }
-  localStorage.setItem(BASE_KEY, val);
+  localStorage.setItem(BASE_KEY, JSON.stringify({
+    address: val,
+    lat: baseCoords ? baseCoords.lat : null,
+    lng: baseCoords ? baseCoords.lng : null
+  }));
   showToast('Αποθηκεύτηκε η αφετηρία');
   renderBaseBadge();
 }
@@ -533,10 +570,13 @@ function renderBaseBadge() {
   const base = loadBaseAddress();
   const badge = document.getElementById('base-badge');
   const input = document.getElementById('base-address');
-  if (base) {
-    badge.innerHTML = icon('home', 'md') + '<span><span class="badge-label">Αφετηρία:</span> ' + escapeHtml(base) + '</span>';
+  if (base && base.address) {
+    badge.innerHTML = icon('home', 'md') + '<span><span class="badge-label">Αφετηρία:</span> ' + escapeHtml(base.address) + '</span>';
     badge.classList.add('base-set');
-    input.value = base;
+    input.value = base.address;
+    if (base.lat != null && base.lng != null) {
+      baseCoords = { lat: base.lat, lng: base.lng };
+    }
   } else {
     badge.innerHTML = icon('alert', 'md') + '<span>Δεν έχεις ορίσει αφετηρία — πήγαινε στις Ρυθμίσεις</span>';
     badge.classList.remove('base-set');
@@ -574,14 +614,47 @@ function loadPlacesScript() {
   document.head.appendChild(script);
 }
 
+// ---------- Mini χάρτης ακριβούς τοποθεσίας ----------
+const pickerMaps = {}; // { containerId: { map, marker } }
+let fCoords = null;
+let baseCoords = null;
+
+function showMapPicker(containerId, hintId, coords, onChange) {
+  const container = document.getElementById(containerId);
+  const hint = document.getElementById(hintId);
+  container.classList.add('visible');
+  hint.style.display = 'block';
+
+  if (!pickerMaps[containerId]) {
+    const map = new google.maps.Map(container, {
+      center: coords, zoom: 18, disableDefaultUI: true, gestureHandling: 'greedy'
+    });
+    const marker = new google.maps.Marker({
+      position: coords, map, draggable: true
+    });
+    marker.addListener('dragend', () => {
+      const pos = marker.getPosition();
+      onChange({ lat: pos.lat(), lng: pos.lng() });
+    });
+    pickerMaps[containerId] = { map, marker };
+  } else {
+    pickerMaps[containerId].map.setCenter(coords);
+    pickerMaps[containerId].marker.setPosition(coords);
+  }
+}
+
 window.initAutocompletes = function() {
-  const opts = { fields: ['formatted_address'], componentRestrictions: { country: 'gr' } };
+  const opts = { fields: ['formatted_address', 'geometry'], componentRestrictions: { country: 'gr' } };
 
   const baseInput = document.getElementById('base-address');
   const baseAC = new google.maps.places.Autocomplete(baseInput, opts);
   baseAC.addListener('place_changed', () => {
     const p = baseAC.getPlace();
     if (p && p.formatted_address) baseInput.value = p.formatted_address;
+    if (p && p.geometry && p.geometry.location) {
+      baseCoords = { lat: p.geometry.location.lat(), lng: p.geometry.location.lng() };
+      showMapPicker('base-map', 'base-map-hint', baseCoords, (c) => { baseCoords = c; });
+    }
   });
 
   const addInput = document.getElementById('f-address');
@@ -589,6 +662,10 @@ window.initAutocompletes = function() {
   addAC.addListener('place_changed', () => {
     const p = addAC.getPlace();
     if (p && p.formatted_address) addInput.value = p.formatted_address;
+    if (p && p.geometry && p.geometry.location) {
+      fCoords = { lat: p.geometry.location.lat(), lng: p.geometry.location.lng() };
+      showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
+    }
   });
 };
 
@@ -671,18 +748,31 @@ function renderResultState(html) {
   document.getElementById('result-content').innerHTML = html;
 }
 
+function locationToParam(obj) {
+  // obj: { address, lat, lng } — προτιμάμε συντεταγμένες αν υπάρχουν (πιο ακριβές, π.χ. είσοδος αποθήκης)
+  if (obj.lat != null && obj.lng != null) return `${obj.lat},${obj.lng}`;
+  return obj.address;
+}
+
 function buildMapsUrl(base, orderedStops) {
-  const origin = encodeURIComponent(base);
-  const destination = encodeURIComponent(base); // κυκλική διαδρομή: γυρνάμε στην αφετηρία
-  const waypoints = orderedStops.map(a => encodeURIComponent(a.address)).join('|');
+  const origin = encodeURIComponent(locationToParam(base));
+  const destination = encodeURIComponent(locationToParam(base)); // κυκλική διαδρομή: γυρνάμε στην αφετηρία
+  const waypoints = orderedStops.map(a => encodeURIComponent(locationToParam(a))).join('|');
   return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
+}
+
+function toRoutesApiWaypoint(obj) {
+  if (obj.lat != null && obj.lng != null) {
+    return { location: { latLng: { latitude: obj.lat, longitude: obj.lng } } };
+  }
+  return { address: obj.address };
 }
 
 async function generateRoute() {
   const base = loadBaseAddress();
   const apiKey = loadApiKey();
 
-  if (!base) {
+  if (!base || !base.address) {
     showToast('Όρισε πρώτα αφετηρία στις Ρυθμίσεις');
     return;
   }
@@ -708,9 +798,9 @@ async function generateRoute() {
   `);
 
   const body = {
-    origin: { address: base },
-    destination: { address: base },
-    intermediates: selected.map(a => ({ address: a.address })),
+    origin: toRoutesApiWaypoint(base),
+    destination: toRoutesApiWaypoint(base),
+    intermediates: selected.map(toRoutesApiWaypoint),
     travelMode: "DRIVE",
     optimizeWaypointOrder: true
   };
