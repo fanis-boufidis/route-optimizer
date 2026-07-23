@@ -517,6 +517,14 @@ function toggleSelection(id, checked) {
 }
 
 function updateFooterBar() {
+  // Καθαρισμός: αφαίρεσε IDs που δεν αντιστοιχούν πια σε υπαρκτή διεύθυνση (π.χ. διαγράφηκαν)
+  const existingIds = new Set(loadAddresses().map(a => a.id));
+  let changed = false;
+  selectedIds.forEach(id => {
+    if (!existingIds.has(id)) { selectedIds.delete(id); changed = true; }
+  });
+  if (changed) saveSelection(selectedIds);
+
   const bar = document.getElementById('footer-bar');
   const countEl = document.getElementById('footer-count');
   const n = selectedIds.size;
