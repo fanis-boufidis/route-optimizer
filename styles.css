@@ -34,13 +34,44 @@
   --text-xl:        1.5rem;      /* ~24px */
 }
 
+/* --- Bright / Light mode: ενεργοποιείται όταν <html data-theme="light"> --- */
+html[data-theme="light"] {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  --bg:             #f5f5f5;
+  --surface:        #ffffff;
+  --surface-raised: #ffffff;
+  --surface-hover:  #ececec;
+  --surface-active: #e2e2e2;
+
+  --text:           #161616;
+  --text-secondary: #5a5a5a;
+  --text-muted:     #8a8a8a;
+
+  --border:         #e0e0e0;
+  --border-strong:  #cccccc;
+  --border-focus:   #555555;
+}
+
+/* Toast χρειάζεται πιο σκούρο φόντο ακόμα και σε light mode, για αντίθεση */
+html[data-theme="light"] #toast {
+  background: #2a2a2a;
+  color: #f5f5f5;
+  border-color: #444444;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
