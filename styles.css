@@ -27,6 +27,11 @@
   --transition:     0.18s ease;
   --max-width:      560px;
 
+  /* Σταθερά χρώματα για κύρια κουμπιά — ΔΕΝ αλλάζουν μεταξύ light/dark, εγγυημένη αντίθεση */
+  --accent-bg:      #232327;
+  --accent-text:    #f0f0f0;
+  --accent-hover:   #2f2f34;
+
   --text-base:      1.0625rem;   /* ~17px — bumped for outdoor readability */
   --text-sm:        0.9375rem;   /* ~15px */
   --text-xs:        0.8125rem;    /* ~13px */
@@ -278,17 +283,17 @@ button.primary {
   font-size: var(--text-base);
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--bg);
-  background: var(--text);
-  border: 1px solid var(--text);
+  color: var(--accent-text);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bg);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background var(--transition), color var(--transition), opacity var(--transition), transform 0.1s;
 }
 
 button.primary:hover {
-  background: #d4d4d4;
-  border-color: #d4d4d4;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 button.primary:active {
