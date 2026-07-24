@@ -1,49 +1,1157 @@
-const CACHE_NAME = 'route-optimizer-v49';
+/* ============================================================
+   Route Optimizer — Dark Professional Theme
+   Monochrome · Inter · Mobile-first PWA
+   ============================================================ */
 
-// Τα βασικά αρχεία που κάνουμε cache ώστε το app να ανοίγει γρήγορα / offline
-const APP_SHELL = [
-  './',
-  './index.html',
-  './styles.css',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
-];
+:root {
+  --bg:             #121214;
+  --surface:        #1c1c1f;
+  --surface-raised: #232327;
+  --surface-hover:  #2b2b30;
+  --surface-active: #35353b;
 
-// Install: γεμίζουμε το cache με το app shell
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
-});
+  --text:           #e4e4e6;
+  --text-secondary: #9a9aa0;
+  --text-muted:     #6f6f76;
 
-// Activate: καθαρίζουμε παλιά caches από προηγούμενες εκδόσεις
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
-});
+  --border:         #303035;
+  --border-strong:  #404046;
+  --border-focus:   #7a7a82;
 
-// Fetch: cache-first για το app shell.
-// ΠΡΟΣΟΧΗ: οι κλήσεις προς το Google Routes API (routes.googleapis.com)
-// ΔΕΝ πρέπει να γίνονται cache — θέλουμε πάντα φρέσκο αποτέλεσμα δρομολόγησης.
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  --radius-sm:      6px;
+  --radius-md:      10px;
+  --radius-lg:      14px;
+  --radius-pill:    999px;
 
-  // Ποτέ μην κάνεις cache κλήσεις προς το Google API
-  if (url.hostname.includes('googleapis.com')) {
-    return; // άφησε το request να πάει κανονικά στο δίκτυο
+  --font:           "Inter", system-ui, -apple-system, sans-serif;
+  --transition:     0.18s ease;
+  --max-width:      560px;
+
+  /* Σταθερά χρώματα για κύρια κουμπιά — ΔΕΝ αλλάζουν μεταξύ light/dark, εγγυημένη αντίθεση */
+  --accent-bg:      #232327;
+  --accent-text:    #f0f0f0;
+  --accent-hover:   #2f2f34;
+
+  --text-base:      1.0625rem;   /* ~17px — bumped for outdoor readability */
+  --text-sm:        0.9375rem;   /* ~15px */
+  --text-xs:        0.8125rem;    /* ~13px */
+  --text-lg:        1.25rem;     /* ~20px */
+  --text-xl:        1.5rem;      /* ~24px */
+}
+
+/* --- Bright / Light mode: ενεργοποιείται όταν <html data-theme="light"> --- */
+html[data-theme="light"] {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  --bg:             #f5f5f5;
+  --surface:        #ffffff;
+  --surface-raised: #ffffff;
+  --surface-hover:  #ececec;
+  --surface-active: #e2e2e2;
+
+  --text:           #161616;
+  --text-secondary: #5a5a5a;
+  --text-muted:     #8a8a8a;
+
+  --border:         #e0e0e0;
+  --border-strong:  #cccccc;
+  --border-focus:   #555555;
+}
+
+/* Toast χρειάζεται πιο σκούρο φόντο ακόμα και σε light mode, για αντίθεση */
+html[data-theme="light"] #toast {
+  background: #2a2a2a;
+  color: #f5f5f5;
+  border-color: #444444;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--text-base);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 24px 18px 100px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  min-height: 100dvh;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Icons --- */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: currentColor;
+}
+
+.icon svg {
+  display: block;
+}
+
+.icon-sm svg  { width: 16px; height: 16px; }
+.icon-md svg  { width: 20px; height: 20px; }
+.icon-lg svg  { width: 24px; height: 24px; }
+
+.icon-inline {
+  margin-right: 6px;
+}
+
+/* --- Header --- */
+.page-header {
+  margin-bottom: 24px;
+}
+
+h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* --- Tab navigation --- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 22px;
+  padding: 4px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+
+.tab-btn:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+.tab-btn:active {
+  transform: scale(0.98);
+}
+
+.tab-btn.active {
+  background: var(--surface-active);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.tab-btn--icon {
+  flex: 0 0 auto;
+  min-width: 48px;
+  padding: 12px;
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* --- Panels --- */
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Cards --- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+/* --- Form elements --- */
+label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 16px;
+  letter-spacing: 0.01em;
+}
+
+label:first-child {
+  margin-top: 0;
+}
+
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  padding: 13px 15px;
+  margin-top: 8px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input[type="text"]::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input[type="text"]:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--border-strong);
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.55;
+}
+
+/* --- Primary button --- */
+button.primary {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px 22px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--accent-text);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), opacity var(--transition), transform 0.1s;
+}
+
+button.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button.primary:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+button.primary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 3px;
+}
+
+/* --- Hints --- */
+.hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.hint strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+#base-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-muted);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+#base-badge.base-set {
+  border-left-color: var(--text);
+  color: var(--text);
+}
+
+#base-badge .badge-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+
+#base-badge.base-set .badge-label {
+  color: var(--text);
+}
+
+/* --- Count badge --- */
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 6px 0;
+  margin-bottom: 14px;
+}
+
+/* --- Address list items --- */
+.addr-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.addr-item:hover {
+  border-color: var(--border-strong);
+}
+
+.addr-item.selected {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Custom checkbox */
+.addr-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  position: relative;
+}
+
+.addr-item input[type="checkbox"]:hover {
+  border-color: var(--text-muted);
+}
+
+.addr-item input[type="checkbox"]:checked {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.addr-item input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 11px;
+  border: solid var(--bg);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.addr-item input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.addr-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.addr-name {
+  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.addr-address {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.addr-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 7px;
+}
+
+.addr-meta .icon {
+  color: var(--text-muted);
+}
+
+.addr-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.icon-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* --- Empty state --- */
+#empty-state {
+  display: none;
+  text-align: center;
+  color: var(--text-muted);
+  padding: 52px 28px;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border);
+}
+
+#empty-state .empty-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* --- Footer action bar --- */
+#footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 16px 18px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: rgba(13, 13, 13, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+}
+
+#footer-bar.visible {
+  display: flex;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+#footer-count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+#footer-count.warn {
+  color: var(--text-muted);
+}
+
+#footer-count.ok {
+  color: var(--text);
+}
+
+#footer-bar button.primary {
+  margin-top: 0;
+  width: auto;
+  flex: 1;
+  padding: 14px 20px;
+  white-space: nowrap;
+}
+
+/* --- Toast notification --- */
+#toast {
+  position: fixed;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--surface-raised);
+  color: var(--text);
+  padding: 13px 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  max-width: calc(100% - 36px);
+  text-align: center;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 200;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+body:has(#footer-bar.visible) #toast.show {
+  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+}
+
+/* --- Result panel (route optimization output) --- */
+#panel-result {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  overflow-y: auto;
+  padding: 24px 18px calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+#panel-result.active {
+  display: block;
+}
+
+.result-back {
+  margin-bottom: 18px;
+}
+
+.result-summary {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.result-stat {
+  flex: 1;
+}
+
+.result-stat-value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.result-stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.result-stop {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+}
+
+.result-stop-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--text);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.result-stop-info { flex: 1; min-width: 0; }
+.result-stop-name { font-weight: 600; color: var(--text); }
+.result-stop-address { font-size: var(--text-sm); color: var(--text-secondary); margin-top: 2px; }
+
+.btn-secondary {
+  width: 100%;
+  margin-top: 12px;
+  padding: 15px 22px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+
+/* Loading / error states inside result panel */
+.state-box {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 18px;
+  border: 3px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.state-box .state-error-icon {
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.state-box pre {
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 12px;
+  overflow-x: auto;
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+@media (max-width: 480px) {
+  body {
+    /* Μικραίνουμε τα περιθώρια δεξιά-αριστερά για να κερδίσουμε χώρο στην οθόνη */
+    padding: 16px 12px 90px;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
-    })
-  );
-});
+  .page-header h1 {
+    font-size: 1.3rem; /* Λίγο μικρότερος τίτλος στα μικρά κινητά */
+  }
+
+  /* Προσαρμογή των Tabs ώστε να χωράνε τέλεια */
+  .tabs {
+    gap: 2px;
+  }
+
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 10px 4px;
+  }
+  
+  .tab-btn--icon {
+    min-width: 40px;
+  }
+
+  /* Μικρότερα εσωτερικά κενά στις κάρτες */
+  .card, .addr-item {
+    padding: 14px 12px;
+  }
+
+  /* Μικρότερα γράμματα στις φόρμες */
+  input[type="text"], 
+  textarea, 
+  select {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+  /* Φτιάχνουμε το Footer Bar να στοιβάζει τα στοιχεία κάθετα για να χωράνε */
+  #footer-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  #footer-count {
+    text-align: center; /* Κεντράρουμε το κείμενο */
+  }
+
+  #footer-bar button.primary {
+    width: 100%;
+    white-space: normal; /* Επιτρέπει στο κείμενο του κουμπιού να σπάσει αν χρειαστεί */
+    padding: 12px;
+  }
+}
+
+/* --- Google Places Autocomplete dropdown (dark theme override) --- */
+.pac-container {
+  z-index: 9999 !important;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font-family: var(--font);
+  margin-top: 4px;
+}
+.pac-item {
+  color: var(--text-secondary);
+  padding: 10px 12px;
+  border-color: var(--border);
+  font-size: var(--text-sm);
+}
+.pac-item:hover { background: var(--surface-hover); }
+.pac-item-query { color: var(--text); }
+.pac-matched { color: var(--text); }
+.pac-icon { filter: invert(0.7); }
+
+/* --- Custom file upload button --- */
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 15px 22px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.file-upload-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+.file-upload-btn:active {
+  transform: scale(0.98);
+}
+
+/* --- Filter toggle button --- */
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.filter-toggle:hover { background: var(--surface-hover); }
+.filter-toggle.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* --- Confirm modal --- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.visible { display: flex; }
+.modal-box {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  max-width: 340px;
+  width: 100%;
+}
+.modal-box p { color: var(--text); font-size: var(--text-base); margin: 0 0 18px; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions button { flex: 1; margin-top: 0; }
+
+/* --- Edit mode banner --- */
+.edit-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.edit-banner button {
+  background: none; border: none; color: var(--text-muted);
+  font-size: var(--text-xs); font-weight: 600; cursor: pointer; text-decoration: underline;
+}
+
+/* --- Select all / clear buttons row --- */
+.select-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.select-actions button {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.select-actions button:hover { background: var(--surface-hover); }
+
+/* --- Filter row: sort toggle + select actions μαζί --- */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.filter-row .filter-toggle {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+/* --- Mini map picker (ακριβής τοποθεσία με draggable pin) --- */
+.map-picker {
+  display: none;
+  width: 100%;
+  max-width: 460px;
+  height: 420px;
+  border-radius: var(--radius-md);
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.map-picker.visible { display: block; }
+.map-picker-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* --- Checkbox row (π.χ. toggle ξεχωριστής εξόδου) --- */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 20px; height: 20px; flex-shrink: 0;
+  appearance: none; -webkit-appearance: none;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: pointer;
+  position: relative;
+}
+.checkbox-row input[type="checkbox"]:checked {
+  background: var(--accent-bg);
+  border-color: var(--accent-bg);
+}
+.checkbox-row input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute; left: 6px; top: 2px;
+  width: 5px; height: 9px;
+  border: solid var(--accent-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- Exit link στο αποτέλεσμα διαδρομής --- */
+.exit-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+/* --- Road warning (έργα, μονόδρομος κ.λπ.) --- */
+.road-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(200, 150, 40, 0.12);
+  border: 1px solid rgba(200, 150, 40, 0.35);
+  border-radius: var(--radius-sm);
+  color: #d4a24c;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.road-warning .icon { flex-shrink: 0; }
+
+/* --- Mid point blocks (πολλαπλά ενδιάμεσα σημεία) --- */
+.mid-point-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.mid-point-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mid-point-position {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: var(--text-xs);
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Coordinate display πάνω από κάθε mini χάρτη --- */
+.coord-display {
+  display: block;
+  width: 100%;
+  font-size: var(--text-xs);
+  font-family: 'Courier New', monospace;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.coord-display:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+/* ============================================================
+   DESKTOP TWO-COLUMN LAYOUT
+   Mobile: παραμένει ως έχει (ίδια δομή, tabs, μονή στήλη)
+   Desktop (>=900px): αριστερά Λίστα/Import/Ρυθμίσεις, δεξιά Επεξεργασία
+   ============================================================ */
+
+.right-placeholder {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  body {
+    max-width: none;
+    padding: 32px 24px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-grid {
+    display: grid;
+    grid-template-columns: minmax(380px, 480px) 1fr;
+    gap: 36px;
+    max-width: 1600px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .col-left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-right {
+    position: sticky;
+    top: 32px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* Το panel-add ζει ΜΟΝΙΜΑ δεξιά σε desktop, ανεξάρτητα από τα αριστερά tabs.
+     Ελέγχεται από το body.desktop-editing, όχι από το κοινό .panel.active σύστημα. */
+  #panel-add {
+    display: none !important;
+  }
+  body.desktop-editing #panel-add {
+    display: block !important;
+  }
+
+  .right-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 420px;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+  }
+  body.desktop-editing .right-placeholder {
+    display: none;
+  }
+
+  /* Footer bar: σε desktop γίνεται sticky ΜΕΣΑ στην αριστερή στήλη, στο σωστό πλάτος/θέση,
+     αντί για fixed σε όλο το πλάτος της οθόνης (που "επέπλεε" άσχετα με τη λίστα) */
+  #footer-bar {
+    position: sticky;
+    left: auto;
+    right: auto;
+    bottom: 0;
+    max-width: none;
+    width: 100%;
+    margin: 20px 0 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  #footer-count {
+    text-align: center;
+  }
+  #footer-bar button.primary {
+    width: 100%;
+    white-space: normal;
+  }
+}
