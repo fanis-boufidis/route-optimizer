@@ -147,20 +147,29 @@
 
       <label>Διεύθυνση *</label>
       <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
-      <input type="text" class="coord-display" id="f-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
-      <div id="f-map" class="map-picker"></div>
-      <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
 
-      <button type="button" class="btn-secondary" id="f-mid-add-btn" style="display:none;" onclick="addMidPoint()">+ Προσθήκη ενδιάμεσου σημείου</button>
+      <div class="map-field-group">
+        <div class="mfg-map"><div id="f-map" class="map-picker"></div></div>
+        <div class="mfg-fields">
+          <input type="text" class="coord-display" id="f-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
+          <button type="button" class="btn-secondary" id="f-mid-add-btn" style="display:none;" onclick="addMidPoint()">+ Προσθήκη ενδιάμεσου σημείου</button>
+        </div>
+      </div>
+
       <div id="f-mid-points-container"></div>
 
       <label class="checkbox-row" id="f-exit-toggle-row" style="display:none;">
         <input type="checkbox" id="f-exit-toggle" onchange="toggleExitPicker(this.checked)">
         <span>Ορισμός ξεχωριστής εξόδου</span>
       </label>
-      <input type="text" class="coord-display" id="f-exit-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-exit-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
-      <div id="f-exit-map" class="map-picker"></div>
-      <p class="map-picker-hint" id="f-exit-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή έξοδο.</p>
+      <div class="map-field-group">
+        <div class="mfg-map"><div id="f-exit-map" class="map-picker"></div></div>
+        <div class="mfg-fields">
+          <input type="text" class="coord-display" id="f-exit-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-exit-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <p class="map-picker-hint" id="f-exit-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή έξοδο.</p>
+        </div>
+      </div>
 
       <label>Τηλέφωνο</label>
       <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
@@ -804,13 +813,17 @@ function renderMidPointsUI() {
         <span>Ενδιάμεσο σημείο ${idx + 1}</span>
         <button type="button" class="icon-btn" onclick="removeMidPoint('${mp.uid}')" aria-label="Αφαίρεση">${icon('trash', 'sm')}</button>
       </div>
-      <select class="mid-point-position" onchange="setMidPointPosition('${mp.uid}', this.value)">
-        <option value="before" ${mp.position !== 'after' ? 'selected' : ''}>Πριν την Είσοδο (στη διαδρομή προσέγγισης)</option>
-        <option value="after" ${mp.position === 'after' ? 'selected' : ''}>Μετά την Είσοδο (μέσα στο χώρο)</option>
-      </select>
-      <input type="text" class="coord-display" id="map-${mp.uid}-coords" placeholder="lat, lng"
-             onchange="applyCoordInput('map-${mp.uid}')" onkeydown="if(event.key==='Enter'){this.blur();}">
-      <div id="map-${mp.uid}" class="map-picker"></div>
+      <div class="map-field-group">
+        <div class="mfg-map"><div id="map-${mp.uid}" class="map-picker"></div></div>
+        <div class="mfg-fields">
+          <select class="mid-point-position" onchange="setMidPointPosition('${mp.uid}', this.value)">
+            <option value="before" ${mp.position !== 'after' ? 'selected' : ''}>Πριν την Είσοδο (στη διαδρομή προσέγγισης)</option>
+            <option value="after" ${mp.position === 'after' ? 'selected' : ''}>Μετά την Είσοδο (μέσα στο χώρο)</option>
+          </select>
+          <input type="text" class="coord-display" id="map-${mp.uid}-coords" placeholder="lat, lng"
+                 onchange="applyCoordInput('map-${mp.uid}')" onkeydown="if(event.key==='Enter'){this.blur();}">
+        </div>
+      </div>
     </div>
   `).join('');
 

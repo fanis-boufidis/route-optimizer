@@ -1155,3 +1155,30 @@ body:has(#footer-bar.visible) #toast.show {
     white-space: normal;
   }
 }
+
+/* --- Map + fields grouping: χάρτης + σχετικά πεδία μαζί --- */
+/* Mobile (default): οι wrappers δεν δημιουργούν κουτί, τα παιδιά ρέουν κανονικά (στοιβαγμένα) */
+.mfg-map, .mfg-fields {
+  display: contents;
+}
+
+@media (min-width: 900px) {
+  .map-field-group {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+    gap: 14px 24px;
+    align-items: start;
+    margin-top: 10px;
+  }
+  .mfg-map {
+    display: block;
+    grid-column: 1;
+  }
+  .mfg-fields {
+    display: block;
+    grid-column: 2;
+  }
+  .map-field-group .map-picker {
+    margin-top: 0;
+  }
+}
