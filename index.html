@@ -19,6 +19,9 @@
 </head>
 <body>
 
+<div class="app-grid">
+<div class="col-left">
+
 <header class="page-header">
   <h1>
     <span class="icon icon-lg" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
@@ -60,6 +63,7 @@
   <div class="card">
     <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
     <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
+    <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
     <div id="base-map" class="map-picker"></div>
     <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
     <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
@@ -90,37 +94,7 @@
   </div>
 </div>
 
-<!-- ==================== TAB: ΠΡΟΣΘΗΚΗ ΜΙΑ-ΜΙΑ ==================== -->
-<div class="panel" id="panel-add">
-  <div id="edit-banner" class="edit-banner" style="display:none;">
-    <span>Επεξεργασία διεύθυνσης</span>
-    <button onclick="cancelEdit()">Άκυρο</button>
-  </div>
-  <div class="card">
-    <label>Όνομα *</label>
-    <input type="text" id="f-name" placeholder="π.χ. Γιάννης Παπαδόπουλος">
-
-    <label>Διεύθυνση *</label>
-    <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
-    <div id="f-map" class="map-picker"></div>
-    <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
-
-    <label class="checkbox-row" id="f-exit-toggle-row" style="display:none;">
-      <input type="checkbox" id="f-exit-toggle" onchange="toggleExitPicker(this.checked)">
-      <span>Ορισμός ξεχωριστής εξόδου</span>
-    </label>
-    <div id="f-exit-map" class="map-picker"></div>
-    <p class="map-picker-hint" id="f-exit-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή έξοδο.</p>
-
-    <label>Τηλέφωνο</label>
-    <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
-
-    <label>Σημειώσεις</label>
-    <textarea id="f-notes" rows="2" placeholder="π.χ. Καλύτερα πρωί, κουδούνι 2ος όροφος"></textarea>
-
-    <button class="primary" id="add-submit-btn" onclick="addSingleAddress()">Προσθήκη Διεύθυνσης</button>
-  </div>
-</div>
+<!-- ==================== TAB: ΠΡΟΣΘΗΚΗ ΜΙΑ-ΜΙΑ (μετακινήθηκε στη δεξιά στήλη, βλ. παρακάτω) ==================== -->
 
 <!-- ==================== TAB: BULK IMPORT ==================== -->
 <div class="panel" id="panel-import">
@@ -149,6 +123,56 @@
     <button class="primary" onclick="importBulk()">Εισαγωγή Διευθύνσεων</button>
   </div>
 </div>
+</div><!-- /col-left -->
+
+<div class="col-right">
+  <div id="right-placeholder" class="right-placeholder">
+    Επίλεξε ή πρόσθεσε μια διεύθυνση για να την επεξεργαστείς εδώ.
+  </div>
+
+  <!-- ==================== TAB: ΠΡΟΣΘΗΚΗ / ΕΠΕΞΕΡΓΑΣΙΑ (δεξιά στήλη σε desktop) ==================== -->
+  <div class="panel" id="panel-add">
+    <div id="edit-banner" class="edit-banner" style="display:none;">
+      <span>Επεξεργασία διεύθυνσης</span>
+      <button onclick="cancelEdit()">Άκυρο</button>
+    </div>
+    <div class="card">
+      <label>Όνομα *</label>
+      <input type="text" id="f-name" placeholder="π.χ. Γιάννης Παπαδόπουλος">
+
+      <label>Διεύθυνση *</label>
+      <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
+      <input type="text" class="coord-display" id="f-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+      <div id="f-map" class="map-picker"></div>
+      <p class="map-picker-hint" id="f-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο (χρήσιμο για κτίρια, αποθήκες κ.λπ.).</p>
+
+      <button type="button" class="btn-secondary" id="f-mid-add-btn" style="display:none;" onclick="addMidPoint()">+ Προσθήκη ενδιάμεσου σημείου</button>
+      <div id="f-mid-points-container"></div>
+
+      <label class="checkbox-row" id="f-exit-toggle-row" style="display:none;">
+        <input type="checkbox" id="f-exit-toggle" onchange="toggleExitPicker(this.checked)">
+        <span>Ορισμός ξεχωριστής εξόδου</span>
+      </label>
+      <input type="text" class="coord-display" id="f-exit-map-coords" placeholder="lat, lng" onchange="applyCoordInput('f-exit-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+      <div id="f-exit-map" class="map-picker"></div>
+      <p class="map-picker-hint" id="f-exit-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή έξοδο.</p>
+
+      <label>Τηλέφωνο</label>
+      <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
+
+      <label>Σημειώσεις</label>
+      <textarea id="f-notes" rows="2" placeholder="π.χ. Καλύτερα πρωί, κουδούνι 2ος όροφος"></textarea>
+
+      <label>Προειδοποίηση Δρόμου (προαιρετικό)</label>
+      <textarea id="f-road-warning" rows="2" placeholder="π.χ. Έργα στην οδό, μονόδρομος που δεν έχει ενημερωθεί στο Google Maps"></textarea>
+      <p class="hint">Εμφανίζεται με προειδοποιητική σήμανση στη λίστα και στο αποτέλεσμα διαδρομής.</p>
+      <button type="button" class="btn-secondary" id="f-obstacle-btn" style="display:none;" onclick="markObstacle()">Σημείωσε το εμπόδιο στον χάρτη</button>
+
+      <button class="primary" id="add-submit-btn" onclick="addSingleAddress()">Προσθήκη Διεύθυνσης</button>
+    </div>
+  </div>
+</div><!-- /col-right -->
+</div><!-- /app-grid -->
 
 <!-- ==================== ΑΠΟΤΕΛΕΣΜΑ ΔΙΑΔΡΟΜΗΣ ==================== -->
 <div class="panel" id="panel-result">
@@ -217,14 +241,32 @@ function showToast(msg) {
 }
 
 // ---------- Tabs ----------
+function isDesktopLayout() {
+  return window.matchMedia('(min-width: 900px)').matches;
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const targetTab = btn.dataset.tab;
+    const desktop = isDesktopLayout();
+
+    if (desktop && targetTab === 'add') {
+      // Desktop: η φόρμα ανοίγει ΔΕΞΙΑ, η αριστερή στήλη (Λίστα/Import/Ρυθμίσεις) μένει όπως ήταν
+      document.body.classList.add('desktop-editing');
+      document.getElementById('panel-add').classList.add('active');
+      return;
+    }
+
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => {
+      // Σε desktop, το panel-add (δεξιά) δεν πρέπει να επηρεάζεται από τα αριστερά tabs
+      if (desktop && p.id === 'panel-add') return;
+      p.classList.remove('active');
+    });
     btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'list') renderList();
-    if (btn.dataset.tab === 'settings' && baseCoords && window.google && window.google.maps) {
+    document.getElementById('panel-' + targetTab).classList.add('active');
+    if (targetTab === 'list') renderList();
+    if (targetTab === 'settings' && baseCoords && window.google && window.google.maps) {
       showMapPicker('base-map', 'base-map-hint', baseCoords, (c) => { baseCoords = c; });
     }
   });
@@ -240,11 +282,25 @@ function editAddress(id) {
   editingId = id;
   fCoords = (a.lat != null && a.lng != null) ? { lat: a.lat, lng: a.lng } : null;
   fExitCoords = (a.exitLat != null && a.exitLng != null) ? { lat: a.exitLat, lng: a.exitLng } : null;
+  fObstacleCoords = (a.obstacleLat != null && a.obstacleLng != null) ? { lat: a.obstacleLat, lng: a.obstacleLng } : null;
+
+  // Φόρτωση ενδιάμεσων σημείων: υποστηρίζει και το παλιό μοναδικό midLat/midLng
+  fMidPoints = [];
+  if (Array.isArray(a.midPoints)) {
+    fMidPoints = a.midPoints.map(mp => ({
+      uid: 'mid_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      lat: mp.lat, lng: mp.lng, position: mp.position || 'before'
+    }));
+  } else if (a.midLat != null && a.midLng != null) {
+    // Παλιά μορφή: το μοναδικό ενδιάμεσο σημείο ήταν πάντα "μετά την είσοδο"
+    fMidPoints = [{ uid: 'mid_' + Date.now().toString(36), lat: a.midLat, lng: a.midLng, position: 'after' }];
+  }
 
   document.getElementById('f-name').value = a.name;
   document.getElementById('f-address').value = a.address;
   document.getElementById('f-phone').value = a.phone || '';
   document.getElementById('f-notes').value = a.notes || '';
+  document.getElementById('f-road-warning').value = a.roadWarning || '';
 
   document.getElementById('edit-banner').style.display = 'flex';
   document.getElementById('add-submit-btn').textContent = 'Αποθήκευση Αλλαγών';
@@ -254,6 +310,11 @@ function editAddress(id) {
   if (fCoords && window.google && window.google.maps) {
     showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
     document.getElementById('f-exit-toggle-row').style.display = 'flex';
+    document.getElementById('f-mid-add-btn').style.display = 'block';
+    document.getElementById('f-obstacle-btn').style.display = 'block';
+    renderMidPointsUI();
+
+    if (fObstacleCoords) markObstacle();
 
     if (fExitCoords) {
       document.getElementById('f-exit-toggle').checked = true;
@@ -265,15 +326,25 @@ function editAddress(id) {
 function cancelEdit() {
   editingId = null;
   fCoords = null;
+  fMidPoints = [];
+  if (isDesktopLayout()) {
+    document.body.classList.remove('desktop-editing');
+    document.getElementById('panel-add').classList.remove('active');
+  }
   fExitCoords = null;
+  removeObstacleMarker();
   document.getElementById('f-name').value = '';
   document.getElementById('f-address').value = '';
   document.getElementById('f-phone').value = '';
   document.getElementById('f-notes').value = '';
+  document.getElementById('f-road-warning').value = '';
   document.getElementById('edit-banner').style.display = 'none';
   document.getElementById('add-submit-btn').textContent = 'Προσθήκη Διεύθυνσης';
   document.getElementById('f-map').classList.remove('visible');
   document.getElementById('f-map-hint').style.display = 'none';
+  document.getElementById('f-mid-add-btn').style.display = 'none';
+  document.getElementById('f-obstacle-btn').style.display = 'none';
+  document.getElementById('f-mid-points-container').innerHTML = '';
   document.getElementById('f-exit-toggle-row').style.display = 'none';
   document.getElementById('f-exit-toggle').checked = false;
   document.getElementById('f-exit-map').classList.remove('visible');
@@ -285,6 +356,7 @@ function addSingleAddress() {
   const address = document.getElementById('f-address').value.trim();
   const phone = document.getElementById('f-phone').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
+  const roadWarning = document.getElementById('f-road-warning').value.trim();
 
   if (!name || !address) {
     showToast('Το όνομα και η διεύθυνση είναι υποχρεωτικά');
@@ -297,12 +369,17 @@ function addSingleAddress() {
     const idx = addresses.findIndex(a => a.id === editingId);
     if (idx !== -1) {
       addresses[idx] = {
-        ...addresses[idx], name, address, phone, notes,
+        ...addresses[idx], name, address, phone, notes, roadWarning,
         lat: fCoords ? fCoords.lat : null,
         lng: fCoords ? fCoords.lng : null,
+        midPoints: fMidPoints.map(mp => ({ lat: mp.lat, lng: mp.lng, position: mp.position || 'before' })),
         exitLat: fExitCoords ? fExitCoords.lat : null,
-        exitLng: fExitCoords ? fExitCoords.lng : null
+        exitLng: fExitCoords ? fExitCoords.lng : null,
+        obstacleLat: fObstacleCoords ? fObstacleCoords.lat : null,
+        obstacleLng: fObstacleCoords ? fObstacleCoords.lng : null
       };
+      delete addresses[idx].midLat;
+      delete addresses[idx].midLng;
     }
     saveAddresses(addresses);
     showToast('Ενημερώθηκε: ' + name);
@@ -310,18 +387,26 @@ function addSingleAddress() {
   } else {
     addresses.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      name, address, phone, notes,
+      name, address, phone, notes, roadWarning,
       lat: fCoords ? fCoords.lat : null,
       lng: fCoords ? fCoords.lng : null,
+      midPoints: fMidPoints.map(mp => ({ lat: mp.lat, lng: mp.lng, position: mp.position || 'before' })),
       exitLat: fExitCoords ? fExitCoords.lat : null,
-      exitLng: fExitCoords ? fExitCoords.lng : null
+      exitLng: fExitCoords ? fExitCoords.lng : null,
+      obstacleLat: fObstacleCoords ? fObstacleCoords.lat : null,
+      obstacleLng: fObstacleCoords ? fObstacleCoords.lng : null
     });
     saveAddresses(addresses);
     showToast('Προστέθηκε: ' + name);
     fCoords = null;
+    fMidPoints = [];
     fExitCoords = null;
+    removeObstacleMarker();
     document.getElementById('f-map').classList.remove('visible');
     document.getElementById('f-map-hint').style.display = 'none';
+    document.getElementById('f-mid-add-btn').style.display = 'none';
+    document.getElementById('f-obstacle-btn').style.display = 'none';
+    document.getElementById('f-mid-points-container').innerHTML = '';
     document.getElementById('f-exit-toggle-row').style.display = 'none';
     document.getElementById('f-exit-toggle').checked = false;
     document.getElementById('f-exit-map').classList.remove('visible');
@@ -332,6 +417,7 @@ function addSingleAddress() {
   document.getElementById('f-address').value = '';
   document.getElementById('f-phone').value = '';
   document.getElementById('f-notes').value = '';
+  document.getElementById('f-road-warning').value = '';
 
   renderList();
 }
@@ -646,7 +732,99 @@ function loadPlacesScript() {
 const pickerMaps = {}; // { containerId: { map, marker } }
 let fCoords = null;
 let baseCoords = null;
+let fMidPoints = []; // [{ uid, lat, lng, position }, ...]
 let fExitCoords = null;
+let fObstacleCoords = null;
+
+const OBSTACLE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24">
+  <path d="M12 2 L22 20 L2 20 Z" fill="#e8a83c" stroke="#3a2b0a" stroke-width="1"/>
+  <text x="12" y="18" font-size="12" font-weight="bold" text-anchor="middle" fill="#2a1e05">!</text>
+</svg>`;
+
+function markObstacle() {
+  const entry = pickerMaps['f-map'];
+  if (!entry) return; // ο χάρτης εισόδου πρέπει να είναι ήδη ορισμένος
+
+  const start = fObstacleCoords || fCoords;
+  if (!entry.obstacleMarker) {
+    entry.obstacleMarker = new google.maps.Marker({
+      position: start, map: entry.map, draggable: true,
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(OBSTACLE_ICON_SVG),
+        scaledSize: new google.maps.Size(34, 34),
+        anchor: new google.maps.Point(17, 30)
+      },
+      title: 'Εμπόδιο / Έργα / Αδιέξοδο'
+    });
+    entry.obstacleMarker.addListener('dragend', () => {
+      const pos = entry.obstacleMarker.getPosition();
+      fObstacleCoords = { lat: pos.lat(), lng: pos.lng() };
+    });
+  } else {
+    entry.obstacleMarker.setPosition(start);
+  }
+  fObstacleCoords = start;
+}
+
+function removeObstacleMarker() {
+  const entry = pickerMaps['f-map'];
+  if (entry && entry.obstacleMarker) {
+    entry.obstacleMarker.setMap(null);
+    delete entry.obstacleMarker;
+  }
+  fObstacleCoords = null;
+}
+
+function addMidPoint() {
+  const start = fMidPoints.length > 0
+    ? { lat: fMidPoints[fMidPoints.length - 1].lat, lng: fMidPoints[fMidPoints.length - 1].lng }
+    : fCoords;
+  if (!start) return;
+
+  const uid = 'mid_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  fMidPoints.push({ uid, lat: start.lat, lng: start.lng, position: 'before' });
+  renderMidPointsUI();
+}
+
+function removeMidPoint(uid) {
+  fMidPoints = fMidPoints.filter(mp => mp.uid !== uid);
+  delete pickerMaps['map-' + uid];
+  renderMidPointsUI();
+}
+
+function renderMidPointsUI() {
+  // Καθαρισμός stale αναφορών: το DOM θα ξαναφτιαχτεί από την αρχή παρακάτω,
+  // άρα οι παλιοί Google Map instances (δεμένοι με στοιχεία που θα καταστραφούν) πρέπει να διαγραφούν
+  fMidPoints.forEach(mp => { delete pickerMaps['map-' + mp.uid]; });
+
+  const container = document.getElementById('f-mid-points-container');
+  container.innerHTML = fMidPoints.map((mp, idx) => `
+    <div class="mid-point-block">
+      <div class="mid-point-header">
+        <span>Ενδιάμεσο σημείο ${idx + 1}</span>
+        <button type="button" class="icon-btn" onclick="removeMidPoint('${mp.uid}')" aria-label="Αφαίρεση">${icon('trash', 'sm')}</button>
+      </div>
+      <select class="mid-point-position" onchange="setMidPointPosition('${mp.uid}', this.value)">
+        <option value="before" ${mp.position !== 'after' ? 'selected' : ''}>Πριν την Είσοδο (στη διαδρομή προσέγγισης)</option>
+        <option value="after" ${mp.position === 'after' ? 'selected' : ''}>Μετά την Είσοδο (μέσα στο χώρο)</option>
+      </select>
+      <input type="text" class="coord-display" id="map-${mp.uid}-coords" placeholder="lat, lng"
+             onchange="applyCoordInput('map-${mp.uid}')" onkeydown="if(event.key==='Enter'){this.blur();}">
+      <div id="map-${mp.uid}" class="map-picker"></div>
+    </div>
+  `).join('');
+
+  fMidPoints.forEach(mp => {
+    showMapPicker('map-' + mp.uid, null, { lat: mp.lat, lng: mp.lng }, (c) => {
+      mp.lat = c.lat; mp.lng = c.lng;
+    });
+  });
+}
+
+function setMidPointPosition(uid, value) {
+  const mp = fMidPoints.find(m => m.uid === uid);
+  if (mp) mp.position = value;
+}
 
 function toggleExitPicker(checked) {
   const map = document.getElementById('f-exit-map');
@@ -664,26 +842,69 @@ function toggleExitPicker(checked) {
 
 function showMapPicker(containerId, hintId, coords, onChange) {
   const container = document.getElementById(containerId);
-  const hint = document.getElementById(hintId);
   container.classList.add('visible');
-  hint.style.display = 'block';
+  if (hintId) {
+    const hint = document.getElementById(hintId);
+    if (hint) hint.style.display = 'block';
+  }
+
+  const coordEl = document.getElementById(containerId + '-coords');
+  const updateCoordDisplay = (c) => {
+    if (coordEl) coordEl.value = c.lat.toFixed(6) + ', ' + c.lng.toFixed(6);
+  };
+  updateCoordDisplay(coords);
 
   if (!pickerMaps[containerId]) {
     const map = new google.maps.Map(container, {
-      center: coords, zoom: 18, disableDefaultUI: true, gestureHandling: 'greedy'
+      center: coords, zoom: 18, disableDefaultUI: true, gestureHandling: 'greedy',
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+        mapTypeIds: ['roadmap', 'satellite', 'hybrid']
+      },
+      mapTypeId: 'roadmap'
     });
     const marker = new google.maps.Marker({
       position: coords, map, draggable: true
     });
     marker.addListener('dragend', () => {
       const pos = marker.getPosition();
-      onChange({ lat: pos.lat(), lng: pos.lng() });
+      const c = { lat: pos.lat(), lng: pos.lng() };
+      updateCoordDisplay(c);
+      onChange(c);
     });
-    pickerMaps[containerId] = { map, marker };
+    pickerMaps[containerId] = { map, marker, onChange };
   } else {
     pickerMaps[containerId].map.setCenter(coords);
     pickerMaps[containerId].marker.setPosition(coords);
+    pickerMaps[containerId].onChange = onChange;
   }
+}
+
+function applyCoordInput(containerId) {
+  const input = document.getElementById(containerId + '-coords');
+  const parts = input.value.split(',').map(s => parseFloat(s.trim()));
+
+  if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+    showToast('Μη έγκυρες συντεταγμένες. Μορφή: 40.640123, 22.944567');
+    return;
+  }
+  const [lat, lng] = parts;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    showToast('Οι συντεταγμένες είναι εκτός ορίων');
+    return;
+  }
+
+  const c = { lat, lng };
+  const entry = pickerMaps[containerId];
+  if (!entry) return;
+
+  entry.map.setCenter(c);
+  entry.marker.setPosition(c);
+  input.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+  entry.onChange(c);
+  showToast('Η πινέζα μετακινήθηκε');
 }
 
 window.initAutocompletes = function() {
@@ -709,6 +930,8 @@ window.initAutocompletes = function() {
       fCoords = { lat: p.geometry.location.lat(), lng: p.geometry.location.lng() };
       showMapPicker('f-map', 'f-map-hint', fCoords, (c) => { fCoords = c; });
       document.getElementById('f-exit-toggle-row').style.display = 'flex';
+      document.getElementById('f-mid-add-btn').style.display = 'block';
+      document.getElementById('f-obstacle-btn').style.display = 'block';
     }
   });
 };
@@ -805,7 +1028,20 @@ function buildMapsUrl(base, orderedStops) {
   // Κάθε στάση γίνεται [είσοδος, έξοδος] σαν πραγματικά, ξεχωριστά waypoints στη σειρά
   const waypointParams = [];
   orderedStops.forEach(a => {
+    let midPoints = [];
+    if (Array.isArray(a.midPoints)) {
+      midPoints = a.midPoints;
+    } else if (a.midLat != null && a.midLng != null) {
+      midPoints = [{ lat: a.midLat, lng: a.midLng, position: 'after' }];
+    }
+
+    const before = midPoints.filter(mp => mp.position !== 'after');
+    const after = midPoints.filter(mp => mp.position === 'after');
+
+    before.forEach(mp => waypointParams.push(`${mp.lat},${mp.lng}`));
     waypointParams.push(locationToParam(a));
+    after.forEach(mp => waypointParams.push(`${mp.lat},${mp.lng}`));
+
     if (a.exitLat != null && a.exitLng != null) {
       waypointParams.push(`${a.exitLat},${a.exitLng}`);
     }
@@ -932,6 +1168,12 @@ async function generateRoute() {
           <div class="result-stop-info">
             <div class="result-stop-name">${escapeHtml(a.name)}</div>
             <div class="result-stop-address">${escapeHtml(a.address)}</div>
+            ${a.roadWarning ? `<div class="road-warning">${icon('alert', 'sm')}${escapeHtml(a.roadWarning)}
+              ${(a.obstacleLat != null && a.obstacleLng != null) ? `<a href="https://www.google.com/maps/search/?api=1&query=${a.obstacleLat},${a.obstacleLng}" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline; margin-left:6px;">(δες σημείο)</a>` : ''}
+              </div>` : ''}
+            ${(Array.isArray(a.midPoints) && a.midPoints.length > 0)
+              ? `<div class="exit-link">+ ${a.midPoints.length} ενδιάμεση${a.midPoints.length > 1 ? 'ες στάσεις' : ' στάση'} (ήδη στη διαδρομή)</div>`
+              : ((a.midLat != null && a.midLng != null) ? `<div class="exit-link">+ Ενδιάμεση στάση (ήδη στη διαδρομή)</div>` : '')}
             ${(a.exitLat != null && a.exitLng != null) ? `
               <a class="exit-link" target="_blank" rel="noopener"
                  href="https://www.google.com/maps/search/?api=1&query=${a.exitLat},${a.exitLng}">
@@ -1024,6 +1266,7 @@ function renderList() {
         <div class="addr-address">${escapeHtml(a.address)}</div>
         ${a.phone ? `<div class="addr-meta">${icon('phone', 'sm')}${escapeHtml(a.phone)}</div>` : ''}
         ${a.notes ? `<div class="addr-meta">${icon('notes', 'sm')}${escapeHtml(a.notes)}</div>` : ''}
+        ${a.roadWarning ? `<div class="road-warning">${icon('alert', 'sm')}${escapeHtml(a.roadWarning)}</div>` : ''}
       </div>
       <div class="addr-actions">
         <button class="icon-btn" onclick="editAddress('${a.id}')" aria-label="Επεξεργασία">${icon('edit', 'sm')}</button>

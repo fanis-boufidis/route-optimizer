@@ -958,3 +958,169 @@ body:has(#footer-bar.visible) #toast.show {
   color: var(--text-muted);
   margin-top: 6px;
 }
+
+/* --- Checkbox row (π.χ. toggle ξεχωριστής εξόδου) --- */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] {
+  width: 20px; height: 20px; flex-shrink: 0;
+  appearance: none; -webkit-appearance: none;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: pointer;
+  position: relative;
+}
+.checkbox-row input[type="checkbox"]:checked {
+  background: var(--accent-bg);
+  border-color: var(--accent-bg);
+}
+.checkbox-row input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute; left: 6px; top: 2px;
+  width: 5px; height: 9px;
+  border: solid var(--accent-text);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- Exit link στο αποτέλεσμα διαδρομής --- */
+.exit-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+/* --- Road warning (έργα, μονόδρομος κ.λπ.) --- */
+.road-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(200, 150, 40, 0.12);
+  border: 1px solid rgba(200, 150, 40, 0.35);
+  border-radius: var(--radius-sm);
+  color: #d4a24c;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.road-warning .icon { flex-shrink: 0; }
+
+/* --- Mid point blocks (πολλαπλά ενδιάμεσα σημεία) --- */
+.mid-point-block {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.mid-point-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mid-point-position {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: var(--text-xs);
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Coordinate display πάνω από κάθε mini χάρτη --- */
+.coord-display {
+  display: block;
+  width: 100%;
+  font-size: var(--text-xs);
+  font-family: 'Courier New', monospace;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.coord-display:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+/* ============================================================
+   DESKTOP TWO-COLUMN LAYOUT
+   Mobile: παραμένει ως έχει (ίδια δομή, tabs, μονή στήλη)
+   Desktop (>=900px): αριστερά Λίστα/Import/Ρυθμίσεις, δεξιά Επεξεργασία
+   ============================================================ */
+
+.right-placeholder {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  body {
+    max-width: none;
+    padding: 32px 24px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-grid {
+    display: grid;
+    grid-template-columns: minmax(380px, 480px) 1fr;
+    gap: 36px;
+    max-width: 1280px;
+    margin: 0 auto;
+    align-items: start;
+  }
+
+  .col-left {
+    /* Ίδιο πλάτος/συμπεριφορά με το mobile, απλά τώρα μέσα σε στήλη grid */
+  }
+
+  .col-right {
+    position: sticky;
+    top: 32px;
+  }
+
+  /* Το panel-add ζει ΜΟΝΙΜΑ δεξιά σε desktop, ανεξάρτητα από τα αριστερά tabs.
+     Ελέγχεται από το body.desktop-editing, όχι από το κοινό .panel.active σύστημα. */
+  #panel-add {
+    display: none !important;
+  }
+  body.desktop-editing #panel-add {
+    display: block !important;
+  }
+
+  .right-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 420px;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+  }
+  body.desktop-editing .right-placeholder {
+    display: none;
+  }
+}
