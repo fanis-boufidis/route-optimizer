@@ -1091,12 +1091,16 @@ body:has(#footer-bar.visible) #toast.show {
   }
 
   .col-left {
-    /* Ίδιο πλάτος/συμπεριφορά με το mobile, απλά τώρα μέσα σε στήλη grid */
+    display: flex;
+    flex-direction: column;
   }
 
   .col-right {
     position: sticky;
     top: 32px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    padding-right: 4px;
   }
 
   /* Το panel-add ζει ΜΟΝΙΜΑ δεξιά σε desktop, ανεξάρτητα από τα αριστερά tabs.
@@ -1122,5 +1126,19 @@ body:has(#footer-bar.visible) #toast.show {
   }
   body.desktop-editing .right-placeholder {
     display: none;
+  }
+
+  /* Footer bar: σε desktop γίνεται sticky ΜΕΣΑ στην αριστερή στήλη, στο σωστό πλάτος/θέση,
+     αντί για fixed σε όλο το πλάτος της οθόνης (που "επέπλεε" άσχετα με τη λίστα) */
+  #footer-bar {
+    position: sticky;
+    left: auto;
+    right: auto;
+    bottom: 0;
+    max-width: none;
+    width: 100%;
+    margin: 20px 0 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
   }
 }
