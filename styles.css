@@ -528,7 +528,7 @@ button.primary:focus-visible {
   margin: 0 auto;
   padding: 16px 18px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  background: rgba(13, 13, 13, 0.94);
+  background: var(--surface-raised);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
@@ -1282,4 +1282,39 @@ body:has(#footer-bar.visible) #toast.show {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+/* --- Δεύτερη route-bar (δεξιά στήλη, μόνο desktop) --- */
+#footer-bar-right {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  #footer-bar-right {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    position: sticky;
+    bottom: 0;
+  }
+  #footer-bar-right.visible {
+    display: flex;
+  }
+  #footer-bar-right button.primary {
+    margin-top: 0;
+    flex: 1;
+  }
+  #footer-count-right {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  #footer-count-right.ok { color: var(--text); }
+  #footer-count-right.warn { color: var(--text-muted); }
 }

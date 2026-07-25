@@ -223,6 +223,11 @@
       <button class="primary" id="add-submit-btn" onclick="addSingleAddress()">Προσθήκη Διεύθυνσης</button>
     </div>
   </div>
+
+  <div id="footer-bar-right">
+    <span id="footer-count-right">0 επιλεγμένες</span>
+    <button class="primary" onclick="generateRoute()">Δημιούργησε Διαδρομή</button>
+  </div>
 </div><!-- /col-right -->
 </div><!-- /app-grid -->
 
@@ -1241,19 +1246,26 @@ function updateFooterBar() {
 
   const bar = document.getElementById('footer-bar');
   const countEl = document.getElementById('footer-count');
+  const barRight = document.getElementById('footer-bar-right');
+  const countElRight = document.getElementById('footer-count-right');
   const n = selectedIds.size;
 
   if (n === 0) {
     bar.classList.remove('visible');
+    barRight.classList.remove('visible');
     return;
   }
   bar.classList.add('visible');
+  barRight.classList.add('visible');
 
-  countEl.textContent = n + ' επιλεγμένες';
-  countEl.className = (n >= 5 && n <= 10) ? 'ok' : 'warn';
-  if (n < 5 || n > 10) {
-    countEl.textContent += ' (προτεινόμενο: 5-10)';
-  }
+  let text = n + ' επιλεγμένες';
+  const cls = (n >= 5 && n <= 10) ? 'ok' : 'warn';
+  if (n < 5 || n > 10) text += ' (προτεινόμενο: 5-10)';
+
+  countEl.textContent = text;
+  countEl.className = cls;
+  countElRight.textContent = text;
+  countElRight.className = cls;
 }
 
 // ---------- Δημιουργία βέλτιστης διαδρομής (Google Routes API) ----------
