@@ -309,7 +309,7 @@
     <p id="confirm-message"></p>
     <div class="modal-actions">
       <button class="btn-secondary" onclick="resolveConfirm(false)">Άκυρο</button>
-      <button class="primary" style="margin-top:0;" onclick="resolveConfirm(true)">Διαγραφή</button>
+      <button class="primary" id="confirm-ok-btn" style="margin-top:0;" onclick="resolveConfirm(true)">Επιβεβαίωση</button>
     </div>
   </div>
 </div>
@@ -902,7 +902,7 @@ function formatHistoryDate(ts) {
 }
 
 async function deleteHistoryEntry(id) {
-  const ok = await showConfirm('Διαγραφή αυτής της διαδρομής από το ιστορικό;');
+  const ok = await showConfirm('Διαγραφή αυτής της διαδρομής από το ιστορικό;', 'Διαγραφή');
   if (!ok) return;
   const list = loadHistory().filter(h => h.id !== id);
   saveHistoryList(list);
@@ -916,7 +916,7 @@ async function clearHistory() {
     showToast('Το ιστορικό είναι ήδη άδειο');
     return;
   }
-  const ok = await showConfirm('Διαγραφή ΟΛΟΥ του ιστορικού διαδρομών; Δεν μπορεί να αναιρεθεί.');
+  const ok = await showConfirm('Διαγραφή ΟΛΟΥ του ιστορικού διαδρομών; Δεν μπορεί να αναιρεθεί.', 'Διαγραφή');
   if (!ok) return;
   saveHistoryList([]);
   renderHistory();
@@ -1045,10 +1045,11 @@ function renderStatsGrid() {
 // ---------- Custom confirm modal (αντί για native confirm()) ----------
 let resolveConfirmFn = null;
 
-function showConfirm(message) {
+function showConfirm(message, confirmLabel) {
   return new Promise(resolve => {
     resolveConfirmFn = resolve;
     document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-ok-btn').textContent = confirmLabel || 'Επιβεβαίωση';
     document.getElementById('confirm-modal').classList.add('visible');
   });
 }
@@ -1061,7 +1062,7 @@ function resolveConfirm(result) {
 
 // ---------- Διαγραφή ----------
 async function deleteAddress(id) {
-  const ok = await showConfirm('Διαγραφή αυτής της διεύθυνσης;');
+  const ok = await showConfirm('Διαγραφή αυτής της διεύθυνσης;', 'Διαγραφή');
   if (!ok) return;
   const addresses = loadAddresses().filter(a => a.id !== id);
   saveAddresses(addresses);
@@ -1938,7 +1939,7 @@ async function handleChangePassword() {
 async function handleDeleteAccount() {
   const pw = document.getElementById('acc-delete-password').value;
   if (!pw) { showToast('Βάλε τον κωδικό σου για επιβεβαίωση'); return; }
-  const ok = await showConfirm('ΟΡΙΣΤΙΚΗ διαγραφή λογαριασμού και όλων των δεδομένων; Δεν αναιρείται.');
+  const ok = await showConfirm('ΟΡΙΣΤΙΚΗ διαγραφή λογαριασμού και όλων των δεδομένων; Δεν αναιρείται.', 'Διαγραφή');
   if (!ok) return;
   try {
     await window.fb.reauth(pw);
@@ -1951,7 +1952,7 @@ async function handleDeleteAccount() {
   }
 }
 
-async function handleLogout() {  const ok = await showConfirm('Αποσύνδεση από τον λογαριασμό σου;');
+async function handleLogout() {  const ok = await showConfirm('Αποσύνδεση από τον λογαριασμό σου;', 'Αποσύνδεση');
   if (!ok) return;
   try {
     // Τελευταίο sync πριν την αποσύνδεση
