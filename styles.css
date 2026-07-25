@@ -940,7 +940,7 @@ body:has(#footer-bar.visible) #toast.show {
   background: var(--accent-bg);
   color: var(--accent-text);
   text-decoration: none;
-  padding: 8px 18px;
+  padding: 6px 14px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
