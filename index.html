@@ -62,82 +62,7 @@
 </div>
 
 <!-- ==================== TAB: ΡΥΘΜΙΣΕΙΣ ==================== -->
-<div class="panel" id="panel-settings">
-  <div class="card">
-    <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
-    <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
-    <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
-    <div id="base-map" class="map-picker"></div>
-    <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
-    <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
-    <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
-  </div>
-  <div class="card">
-    <label>Εμφάνιση</label>
-    <button class="primary" id="theme-toggle-btn" onclick="toggleTheme()">Σκούρο Θέμα</button>
-  </div>
-  <div class="card">
-    <label>Google Maps API Key *</label>
-    <input type="text" id="api-key" placeholder="Το API key σου">
-    <p class="hint">Το ίδιο key που δοκίμασες στο test αρχείο. Αποθηκεύεται μόνο τοπικά στο κινητό σου.</p>
-    <button class="primary" onclick="saveApiKey()">Αποθήκευση Key</button>
-  </div>
-  <div class="card">
-    <label>Backup Διευθύνσεων</label>
-    <p class="hint">Οι διευθύνσεις σου είναι αποθηκευμένες μόνο σε αυτό το κινητό. Κατέβασε τακτικά αντίγραφο ασφαλείας.</p>
-    <button class="primary" onclick="exportBackup()">Κατέβασμα Backup (.json)</button>
-
-    <label style="margin-top:20px;">Επαναφορά από Backup</label>
-    <label class="file-upload-btn" for="backup-file">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span id="backup-filename">Επίλεξε αρχείο backup…</span>
-    </label>
-    <input type="file" id="backup-file" accept=".json" onchange="importBackup(event)" style="display:none;">
-    <p class="hint">Προσθέτει τις διευθύνσεις του backup στη λίστα σου (χωρίς να σβήσει τις υπάρχουσες, αγνοεί ακριβή διπλότυπα).</p>
-  </div>
-</div>
-
-<!-- ==================== TAB: ΠΡΟΣΘΗΚΗ ΜΙΑ-ΜΙΑ (μετακινήθηκε στη δεξιά στήλη, βλ. παρακάτω) ==================== -->
-
-<!-- ==================== TAB: BULK IMPORT ==================== -->
-<div class="panel" id="panel-import">
-  <div class="card">
-    <label>Import από Excel (.xlsx / .xls / .csv)</label>
-    <label class="file-upload-btn" for="excel-file">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <span id="excel-filename">Επίλεξε αρχείο…</span>
-    </label>
-    <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" onchange="importExcel(event)" style="display:none;">
-    <p class="hint">
-      Στήλες με αυτή τη σειρά: <strong>Όνομα | Διεύθυνση | Τηλέφωνο | Σημειώσεις</strong><br>
-      Η πρώτη γραμμή μπορεί να είναι header (τίτλοι) — αναγνωρίζεται αυτόματα.
-    </p>
-  </div>
-  <div class="card">
-    <label>Ή επικόλλησε τη λίστα σου (μία διεύθυνση ανά γραμμή)</label>
-    <textarea id="import-text" rows="10" placeholder="Γιάννης Παπαδόπουλος | Τσιμισκή 50, Θεσσαλονίκη | 6971234567 | Κουδούνι 2ος όροφος
-Μαρία Ιωάννου | Εγνατία 100, Θεσσαλονίκη | 2310123456 |
-Κώστας Νικολάου | Λ. Νίκης 30, Θεσσαλονίκη | | Ανοιχτό 9-17"></textarea>
-    <p class="hint">
-      Μορφή ανά γραμμή: <strong>Όνομα | Διεύθυνση | Τηλέφωνο | Σημειώσεις</strong><br>
-      Το τηλέφωνο και οι σημειώσεις είναι προαιρετικά — μπορείς να τα αφήσεις κενά, αλλά κράτα τα "|".<br>
-      Αν εξάγεις από Excel/Google Sheets σε CSV, αντικατέστησε τα κόμματα με "|".
-    </p>
-    <button class="primary" onclick="importBulk()">Εισαγωγή Διευθύνσεων</button>
-  </div>
-</div>
-
-<!-- ==================== TAB: ΙΣΤΟΡΙΚΟ ΔΙΑΔΡΟΜΩΝ ==================== -->
-<div class="panel" id="panel-history">
-  <div id="history-header-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-    <div id="history-count-badge" class="count-badge">0 διαδρομές</div>
-    <button class="filter-toggle" onclick="clearHistory()">Καθαρισμός Ιστορικού</button>
-  </div>
-  <div id="history-list"></div>
-  <div id="history-empty-state" style="display:none;" class="hint">
-    Δεν έχεις δημιουργήσει ακόμα καμία διαδρομή. Θα εμφανίζεται εδώ κάθε φορά που πατάς "Δημιούργησε Διαδρομή".
-  </div>
-</div>
+<!-- Τα Ρυθμίσεις/Import/Ιστορικό μετακινήθηκαν στη δεξιά στήλη (col-right), βλ. παρακάτω -->
 
 <div id="footer-bar">
   <span id="footer-count">0 επιλεγμένες</span>
@@ -148,6 +73,104 @@
 <div class="col-right">
   <div id="right-placeholder" class="right-placeholder">
     Επίλεξε ή πρόσθεσε μια διεύθυνση για να την επεξεργαστείς εδώ.
+  </div>
+
+  <!-- ==================== TAB: ΡΥΘΜΙΣΕΙΣ ==================== -->
+  <div class="panel" id="panel-settings">
+    <div class="edit-banner">
+      <span>Ρυθμίσεις</span>
+      <button onclick="closeRightPanel()">Άκυρο</button>
+    </div>
+    <div class="card">
+      <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
+      <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
+      <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+      <div id="base-map" class="map-picker"></div>
+      <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
+      <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
+      <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
+    </div>
+    <div class="card">
+      <label>Εμφάνιση</label>
+      <button class="primary" id="theme-toggle-btn" onclick="toggleTheme()">Σκούρο Θέμα</button>
+    </div>
+    <div class="card">
+      <label>Google Maps API Key *</label>
+      <input type="text" id="api-key" placeholder="Το API key σου">
+      <p class="hint">Το ίδιο key που δοκίμασες στο test αρχείο. Αποθηκεύεται μόνο τοπικά στο κινητό σου.</p>
+      <button class="primary" onclick="saveApiKey()">Αποθήκευση Key</button>
+    </div>
+    <div class="card">
+      <label>Κατανάλωση Καυσίμου (προαιρετικό)</label>
+      <input type="text" id="fuel-consumption" placeholder="π.χ. 7.5 (λίτρα / 100χλμ)">
+      <label style="margin-top:14px;">Τιμή Καυσίμου (€/λίτρο)</label>
+      <input type="text" id="fuel-price" placeholder="π.χ. 1.75">
+      <p class="hint">Χρησιμοποιείται για εκτίμηση κόστους καυσίμου στα Στατιστικά (tab Ιστορικό). Άφησέ τα κενά αν δεν θες αυτή την εκτίμηση.</p>
+      <button class="primary" onclick="saveFuelSettings()">Αποθήκευση</button>
+    </div>
+    <div class="card">
+      <label>Backup Διευθύνσεων</label>
+      <p class="hint">Οι διευθύνσεις σου είναι αποθηκευμένες μόνο σε αυτό το κινητό. Κατέβασε τακτικά αντίγραφο ασφαλείας.</p>
+      <button class="primary" onclick="exportBackup()">Κατέβασμα Backup (.json)</button>
+
+      <label style="margin-top:20px;">Επαναφορά από Backup</label>
+      <label class="file-upload-btn" for="backup-file">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="backup-filename">Επίλεξε αρχείο backup…</span>
+      </label>
+      <input type="file" id="backup-file" accept=".json" onchange="importBackup(event)" style="display:none;">
+      <p class="hint">Προσθέτει τις διευθύνσεις του backup στη λίστα σου (χωρίς να σβήσει τις υπάρχουσες, αγνοεί ακριβή διπλότυπα).</p>
+    </div>
+  </div>
+
+  <!-- ==================== TAB: BULK IMPORT ==================== -->
+  <div class="panel" id="panel-import">
+    <div class="edit-banner">
+      <span>Import Διευθύνσεων</span>
+      <button onclick="closeRightPanel()">Άκυρο</button>
+    </div>
+    <div class="card">
+      <label>Import από Excel (.xlsx / .xls / .csv)</label>
+      <label class="file-upload-btn" for="excel-file">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="excel-filename">Επίλεξε αρχείο…</span>
+      </label>
+      <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" onchange="importExcel(event)" style="display:none;">
+      <p class="hint">
+        Στήλες με αυτή τη σειρά: <strong>Όνομα | Διεύθυνση | Τηλέφωνο | Σημειώσεις</strong><br>
+        Η πρώτη γραμμή μπορεί να είναι header (τίτλοι) — αναγνωρίζεται αυτόματα.
+      </p>
+    </div>
+    <div class="card">
+      <label>Ή επικόλλησε τη λίστα σου (μία διεύθυνση ανά γραμμή)</label>
+      <textarea id="import-text" rows="10" placeholder="Γιάννης Παπαδόπουλος | Τσιμισκή 50, Θεσσαλονίκη | 6971234567 | Κουδούνι 2ος όροφος
+Μαρία Ιωάννου | Εγνατία 100, Θεσσαλονίκη | 2310123456 |
+Κώστας Νικολάου | Λ. Νίκης 30, Θεσσαλονίκη | | Ανοιχτό 9-17"></textarea>
+      <p class="hint">
+        Μορφή ανά γραμμή: <strong>Όνομα | Διεύθυνση | Τηλέφωνο | Σημειώσεις</strong><br>
+        Το τηλέφωνο και οι σημειώσεις είναι προαιρετικά — μπορείς να τα αφήσεις κενά, αλλά κράτα τα "|".<br>
+        Αν εξάγεις από Excel/Google Sheets σε CSV, αντικατέστησε τα κόμματα με "|".
+      </p>
+      <button class="primary" onclick="importBulk()">Εισαγωγή Διευθύνσεων</button>
+    </div>
+  </div>
+
+  <!-- ==================== TAB: ΙΣΤΟΡΙΚΟ ΔΙΑΔΡΟΜΩΝ ==================== -->
+  <div class="panel" id="panel-history">
+    <div class="edit-banner">
+      <span>Ιστορικό Διαδρομών</span>
+      <button onclick="closeRightPanel()">Άκυρο</button>
+    </div>
+    <div id="stats-grid" class="stats-grid"></div>
+
+    <div id="history-header-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+      <div id="history-count-badge" class="count-badge">0 διαδρομές</div>
+      <button class="filter-toggle" onclick="clearHistory()">Καθαρισμός Ιστορικού</button>
+    </div>
+    <div id="history-list"></div>
+    <div id="history-empty-state" style="display:none;" class="hint">
+      Δεν έχεις δημιουργήσει ακόμα καμία διαδρομή. Θα εμφανίζεται εδώ κάθε φορά που πατάς "Δημιούργησε Διαδρομή".
+    </div>
   </div>
 
   <!-- ==================== TAB: ΠΡΟΣΘΗΚΗ / ΕΠΕΞΕΡΓΑΣΙΑ (δεξιά στήλη σε desktop) ==================== -->
@@ -269,24 +292,53 @@ function isDesktopLayout() {
   return window.matchMedia('(min-width: 900px)').matches;
 }
 
+function openDesktopPanel(name) {
+  document.body.setAttribute('data-right-panel', name);
+}
+
+function closeDesktopPanel() {
+  document.body.removeAttribute('data-right-panel');
+}
+
+// Κλείνει ό,τι είναι ανοιχτό δεξιά (desktop) ή γυρνάει στη Λίστα (mobile).
+// Χρησιμοποιείται από τα κουμπιά "Άκυρο" σε Ρυθμίσεις/Import/Ιστορικό/Προσθήκη.
+function closeRightPanel() {
+  if (isDesktopLayout()) {
+    closeDesktopPanel();
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const listBtn = document.querySelector('.tab-btn[data-tab="list"]');
+    if (listBtn) listBtn.classList.add('active');
+  } else {
+    document.querySelector('.tab-btn[data-tab="list"]').click();
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const targetTab = btn.dataset.tab;
     const desktop = isDesktopLayout();
 
-    if (desktop && targetTab === 'add') {
-      // Desktop: η φόρμα ανοίγει ΔΕΞΙΑ, η αριστερή στήλη (Λίστα/Import/Ρυθμίσεις) μένει όπως ήταν
-      document.body.classList.add('desktop-editing');
-      document.getElementById('panel-add').classList.add('active');
+    if (desktop) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (targetTab === 'list') {
+        // Η Λίστα είναι πάντα ορατή αριστερά· το κουμπί απλά κλείνει ό,τι είναι ανοιχτό δεξιά
+        closeDesktopPanel();
+        return;
+      }
+
+      openDesktopPanel(targetTab);
+      if (targetTab === 'history') renderHistory();
+      if (targetTab === 'settings' && baseCoords && window.google && window.google.maps) {
+        showMapPicker('base-map', 'base-map-hint', baseCoords, (c) => { baseCoords = c; });
+      }
       return;
     }
 
+    // ---- Mobile: παλιά συμπεριφορά, ένα panel ορατό τη φορά ----
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => {
-      // Σε desktop, το panel-add (δεξιά) δεν πρέπει να επηρεάζεται από τα αριστερά tabs
-      if (desktop && p.id === 'panel-add') return;
-      p.classList.remove('active');
-    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + targetTab).classList.add('active');
     if (targetTab === 'list') renderList();
@@ -353,8 +405,7 @@ function cancelEdit() {
   fCoords = null;
   fMidPoints = [];
   if (isDesktopLayout()) {
-    document.body.classList.remove('desktop-editing');
-    document.getElementById('panel-add').classList.remove('active');
+    closeRightPanel();
   }
   fExitCoords = null;
   removeObstacleMarker();
@@ -687,6 +738,7 @@ function toggleHistoryStops(id) {
 }
 
 function renderHistory() {
+  renderStatsGrid();
   const list = loadHistory();
   const listEl = document.getElementById('history-list');
   const emptyEl = document.getElementById('history-empty-state');
@@ -717,6 +769,86 @@ function renderHistory() {
       </div>
     </div>
   `).join('');
+}
+
+// ---------- Ρυθμίσεις: Καύσιμο ----------
+const FUEL_CONSUMPTION_KEY = 'fuel_consumption_v1';
+const FUEL_PRICE_KEY = 'fuel_price_v1';
+
+function loadFuelSettings() {
+  const c = parseFloat(localStorage.getItem(FUEL_CONSUMPTION_KEY));
+  const p = parseFloat(localStorage.getItem(FUEL_PRICE_KEY));
+  return {
+    consumption: isNaN(c) ? null : c, // λίτρα / 100χλμ
+    price: isNaN(p) ? null : p        // € / λίτρο
+  };
+}
+
+function saveFuelSettings() {
+  const c = document.getElementById('fuel-consumption').value.trim();
+  const p = document.getElementById('fuel-price').value.trim();
+  if (c) localStorage.setItem(FUEL_CONSUMPTION_KEY, c); else localStorage.removeItem(FUEL_CONSUMPTION_KEY);
+  if (p) localStorage.setItem(FUEL_PRICE_KEY, p); else localStorage.removeItem(FUEL_PRICE_KEY);
+  showToast('Αποθηκεύτηκαν οι ρυθμίσεις καυσίμου');
+}
+
+function renderFuelFields() {
+  const { consumption, price } = loadFuelSettings();
+  document.getElementById('fuel-consumption').value = consumption != null ? consumption : '';
+  document.getElementById('fuel-price').value = price != null ? price : '';
+}
+
+// ---------- Στατιστικά (υπολογίζονται από το ιστορικό) ----------
+function computeStatsForPeriod(list, sinceDate) {
+  const filtered = sinceDate ? list.filter(h => h.timestamp >= sinceDate.getTime()) : list;
+  const totalKm = filtered.reduce((sum, h) => sum + parseFloat(h.distanceKm || 0), 0);
+  const totalMin = filtered.reduce((sum, h) => sum + (h.durationMin || 0), 0);
+  return { count: filtered.length, totalKm, totalMin };
+}
+
+function formatDuration(totalMin) {
+  const h = Math.floor(totalMin / 60);
+  const m = Math.round(totalMin % 60);
+  if (h === 0) return m + ' λεπτά';
+  return h + 'ω ' + m + 'λ';
+}
+
+function renderStatsGrid() {
+  const list = loadHistory();
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday);
+  const dayOfWeek = (startOfWeek.getDay() + 6) % 7; // Δευτέρα = 0
+  startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const periods = [
+    { label: 'Σήμερα', since: startOfToday },
+    { label: 'Εβδομάδα', since: startOfWeek },
+    { label: 'Μήνας', since: startOfMonth },
+    { label: 'Συνολικά', since: null }
+  ];
+
+  const { consumption, price } = loadFuelSettings();
+
+  document.getElementById('stats-grid').innerHTML = periods.map(p => {
+    const s = computeStatsForPeriod(list, p.since);
+    let fuelLine = '';
+    if (consumption != null && price != null && s.totalKm > 0) {
+      const liters = (s.totalKm * consumption) / 100;
+      const cost = liters * price;
+      fuelLine = `<div class="stat-card-fuel">≈ ${liters.toFixed(1)}L · ${cost.toFixed(2)}€</div>`;
+    }
+    return `
+      <div class="stat-card">
+        <div class="stat-card-label">${p.label}</div>
+        <div class="stat-card-value">${s.totalKm.toFixed(1)} km</div>
+        <div class="stat-card-sub">${formatDuration(s.totalMin)} · ${s.count} διαδρομ${s.count === 1 ? 'ή' : 'ές'}</div>
+        ${fuelLine}
+      </div>
+    `;
+  }).join('');
 }
 
 // ---------- Custom confirm modal (αντί για native confirm()) ----------
@@ -1416,6 +1548,7 @@ function escapeHtml(str) {
 // ---------- Αρχικό render ----------
 renderList();
 renderApiKeyField();
+renderFuelFields();
 loadPlacesScript();
 applyTheme(loadTheme());
 
