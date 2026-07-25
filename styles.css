@@ -901,7 +901,7 @@ body:has(#footer-bar.visible) #toast.show {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  padding: 0 0 0 18px;
+  padding: 0 18px;
   margin-bottom: 14px;
   font-size: var(--text-sm);
   color: var(--text);
@@ -927,13 +927,12 @@ body:has(#footer-bar.visible) #toast.show {
 
 .edit-banner-actions {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 18px;
 }
 .edit-banner-actions > button:not(.save-link) {
   display: flex;
   align-items: center;
-  padding-right: 18px;
 }
 
 .edit-banner-actions .save-link {
