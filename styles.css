@@ -1407,3 +1407,13 @@ body:has(#footer-bar.visible) #toast.show {
   margin-top: 14px;
   min-height: 1em;
 }
+
+/* --- Danger button (διαγραφή λογαριασμού) --- */
+.primary.danger-btn {
+  background: transparent;
+  color: #d4756a;
+  border: 1px solid #d4756a;
+}
+.primary.danger-btn:hover {
+  background: rgba(212, 117, 106, 0.1);
+}
