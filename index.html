@@ -79,7 +79,10 @@
   <div class="panel" id="panel-settings">
     <div class="edit-banner">
       <span>Ρυθμίσεις</span>
-      <button onclick="closeRightPanel()">Άκυρο</button>
+      <div class="edit-banner-actions">
+        <button class="save-link" onclick="saveAllSettings()">Αποθήκευση Όλων</button>
+        <button onclick="closeRightPanel()">Άκυρο</button>
+      </div>
     </div>
     <div class="card">
       <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
@@ -175,9 +178,12 @@
 
   <!-- ==================== TAB: ΠΡΟΣΘΗΚΗ / ΕΠΕΞΕΡΓΑΣΙΑ (δεξιά στήλη σε desktop) ==================== -->
   <div class="panel" id="panel-add">
-    <div id="edit-banner" class="edit-banner" style="display:none;">
-      <span>Επεξεργασία διεύθυνσης</span>
-      <button onclick="cancelEdit()">Άκυρο</button>
+    <div id="edit-banner" class="edit-banner">
+      <span id="edit-banner-title">Προσθήκη Διεύθυνσης</span>
+      <div class="edit-banner-actions">
+        <button class="save-link" onclick="addSingleAddress()">Αποθήκευση</button>
+        <button onclick="cancelEdit()">Άκυρο</button>
+      </div>
     </div>
     <div class="card">
       <label>Όνομα *</label>
@@ -379,7 +385,7 @@ function editAddress(id) {
   document.getElementById('f-notes').value = a.notes || '';
   document.getElementById('f-road-warning').value = a.roadWarning || '';
 
-  document.getElementById('edit-banner').style.display = 'flex';
+  document.getElementById('edit-banner-title').textContent = 'Επεξεργασία διεύθυνσης';
   document.getElementById('add-submit-btn').textContent = 'Αποθήκευση Αλλαγών';
 
   document.querySelector('.tab-btn[data-tab="add"]').click();
@@ -414,7 +420,7 @@ function cancelEdit() {
   document.getElementById('f-phone').value = '';
   document.getElementById('f-notes').value = '';
   document.getElementById('f-road-warning').value = '';
-  document.getElementById('edit-banner').style.display = 'none';
+  document.getElementById('edit-banner-title').textContent = 'Προσθήκη Διεύθυνσης';
   document.getElementById('add-submit-btn').textContent = 'Προσθήκη Διεύθυνσης';
   document.getElementById('f-map').classList.remove('visible');
   document.getElementById('f-map-hint').style.display = 'none';
@@ -784,12 +790,12 @@ function loadFuelSettings() {
   };
 }
 
-function saveFuelSettings() {
+function saveFuelSettings(silent) {
   const c = document.getElementById('fuel-consumption').value.trim();
   const p = document.getElementById('fuel-price').value.trim();
   if (c) localStorage.setItem(FUEL_CONSUMPTION_KEY, c); else localStorage.removeItem(FUEL_CONSUMPTION_KEY);
   if (p) localStorage.setItem(FUEL_PRICE_KEY, p); else localStorage.removeItem(FUEL_PRICE_KEY);
-  showToast('Αποθηκεύτηκαν οι ρυθμίσεις καυσίμου');
+  if (!silent) showToast('Αποθηκεύτηκαν οι ρυθμίσεις καυσίμου');
 }
 
 function renderFuelFields() {
@@ -915,19 +921,20 @@ function loadBaseAddress() {
   return { address: raw, lat: null, lng: null };
 }
 
-function saveBaseAddress() {
+function saveBaseAddress(silent) {
   const val = document.getElementById('base-address').value.trim();
   if (!val) {
-    showToast('Βάλε μια διεύθυνση βάσης');
-    return;
+    if (!silent) showToast('Βάλε μια διεύθυνση βάσης');
+    return false;
   }
   localStorage.setItem(BASE_KEY, JSON.stringify({
     address: val,
     lat: baseCoords ? baseCoords.lat : null,
     lng: baseCoords ? baseCoords.lng : null
   }));
-  showToast('Αποθηκεύτηκε η αφετηρία');
+  if (!silent) showToast('Αποθηκεύτηκε η αφετηρία');
   renderBaseBadge();
+  return true;
 }
 
 function renderBaseBadge() {
@@ -954,15 +961,32 @@ function loadApiKey() {
   return localStorage.getItem(API_KEY_STORAGE) || '';
 }
 
-function saveApiKey() {
+function saveApiKey(silent) {
   const val = document.getElementById('api-key').value.trim();
   if (!val) {
-    showToast('Βάλε το API key σου');
-    return;
+    if (!silent) showToast('Βάλε το API key σου');
+    return false;
   }
   localStorage.setItem(API_KEY_STORAGE, val);
-  showToast('Αποθηκεύτηκε το API key');
+  if (!silent) showToast('Αποθηκεύτηκε το API key');
   loadPlacesScript();
+  return true;
+}
+
+function saveAllSettings() {
+  const baseOk = saveBaseAddress(true);
+  const keyOk = saveApiKey(true);
+  saveFuelSettings(true);
+
+  const missing = [];
+  if (!baseOk) missing.push('αφετηρία');
+  if (!keyOk) missing.push('API key');
+
+  if (missing.length > 0) {
+    showToast('Αποθηκεύτηκαν οι ρυθμίσεις (λείπει: ' + missing.join(', ') + ')');
+  } else {
+    showToast('Όλες οι ρυθμίσεις αποθηκεύτηκαν');
+  }
 }
 
 // ---------- Places Autocomplete ----------
