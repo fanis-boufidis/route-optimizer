@@ -1111,16 +1111,26 @@ body:has(#footer-bar.visible) #toast.show {
     display: block !important;
   }
 
-  /* Τα 4 "δεξιά" panels (Προσθήκη/Ρυθμίσεις/Import/Ιστορικό) ελέγχονται από το
+  /* Τα 5 "δεξιά" panels (Προσθήκη/Ρυθμίσεις/Import/Ιστορικό/Αποτέλεσμα) ελέγχονται από το
      body[data-right-panel="..."] attribute, ΟΧΙ από το κοινό .panel.active σύστημα (που αφορά μόνο mobile). */
-  #panel-add, #panel-settings, #panel-import, #panel-history {
+  #panel-add, #panel-settings, #panel-import, #panel-history, #panel-result {
     display: none !important;
   }
   body[data-right-panel="add"] #panel-add,
   body[data-right-panel="settings"] #panel-settings,
   body[data-right-panel="import"] #panel-import,
-  body[data-right-panel="history"] #panel-history {
+  body[data-right-panel="history"] #panel-history,
+  body[data-right-panel="result"] #panel-result {
     display: block !important;
+  }
+
+  /* Σε desktop το panel-result ΔΕΝ είναι πια fullscreen overlay — μπαίνει κανονικά μέσα στη δεξιά στήλη */
+  #panel-result {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    background: transparent;
+    padding: 0;
   }
 
   .right-placeholder {
@@ -1282,39 +1292,4 @@ body:has(#footer-bar.visible) #toast.show {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
-}
-
-/* --- Δεύτερη route-bar (δεξιά στήλη, μόνο desktop) --- */
-#footer-bar-right {
-  display: none;
-}
-
-@media (min-width: 900px) {
-  #footer-bar-right {
-    display: none;
-    align-items: center;
-    gap: 14px;
-    margin-top: 20px;
-    padding: 16px 18px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    position: sticky;
-    bottom: 0;
-  }
-  #footer-bar-right.visible {
-    display: flex;
-  }
-  #footer-bar-right button.primary {
-    margin-top: 0;
-    flex: 1;
-  }
-  #footer-count-right {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-  #footer-count-right.ok { color: var(--text); }
-  #footer-count-right.warn { color: var(--text-muted); }
 }

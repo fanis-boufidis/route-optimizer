@@ -224,20 +224,15 @@
     </div>
   </div>
 
-  <div id="footer-bar-right">
-    <span id="footer-count-right">0 επιλεγμένες</span>
-    <button class="primary" onclick="generateRoute()">Δημιούργησε Διαδρομή</button>
+  <!-- ==================== ΑΠΟΤΕΛΕΣΜΑ ΔΙΑΔΡΟΜΗΣ ==================== -->
+  <div class="panel" id="panel-result">
+    <button class="icon-btn result-back" onclick="closeResult()" aria-label="Πίσω">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div id="result-content"></div>
   </div>
 </div><!-- /col-right -->
 </div><!-- /app-grid -->
-
-<!-- ==================== ΑΠΟΤΕΛΕΣΜΑ ΔΙΑΔΡΟΜΗΣ ==================== -->
-<div class="panel" id="panel-result">
-  <button class="icon-btn result-back" onclick="closeResult()" aria-label="Πίσω">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-  </button>
-  <div id="result-content"></div>
-</div>
 
 <div id="confirm-modal" class="modal-overlay">
   <div class="modal-box">
@@ -1246,35 +1241,38 @@ function updateFooterBar() {
 
   const bar = document.getElementById('footer-bar');
   const countEl = document.getElementById('footer-count');
-  const barRight = document.getElementById('footer-bar-right');
-  const countElRight = document.getElementById('footer-count-right');
   const n = selectedIds.size;
 
   if (n === 0) {
     bar.classList.remove('visible');
-    barRight.classList.remove('visible');
     return;
   }
   bar.classList.add('visible');
-  barRight.classList.add('visible');
 
-  let text = n + ' επιλεγμένες';
-  const cls = (n >= 5 && n <= 10) ? 'ok' : 'warn';
-  if (n < 5 || n > 10) text += ' (προτεινόμενο: 5-10)';
-
-  countEl.textContent = text;
-  countEl.className = cls;
-  countElRight.textContent = text;
-  countElRight.className = cls;
+  countEl.textContent = n + ' επιλεγμένες';
+  countEl.className = (n >= 5 && n <= 10) ? 'ok' : 'warn';
+  if (n < 5 || n > 10) {
+    countEl.textContent += ' (προτεινόμενο: 5-10)';
+  }
 }
 
 // ---------- Δημιουργία βέλτιστης διαδρομής (Google Routes API) ----------
 function openResult() {
   document.getElementById('panel-result').classList.add('active');
+  if (isDesktopLayout()) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    openDesktopPanel('result');
+  }
 }
 
 function closeResult() {
   document.getElementById('panel-result').classList.remove('active');
+  if (isDesktopLayout()) {
+    closeDesktopPanel();
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const listBtn = document.querySelector('.tab-btn[data-tab="list"]');
+    if (listBtn) listBtn.classList.add('active');
+  }
 }
 
 function renderResultState(html) {
