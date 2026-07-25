@@ -19,7 +19,33 @@
 </head>
 <body>
 
-<div class="app-grid">
+<!-- ==================== ΟΘΟΝΗ ΣΥΝΔΕΣΗΣ ==================== -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1 class="auth-title">
+      <span class="icon icon-lg" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+      Route Optimizer
+    </h1>
+    <p class="auth-subtitle" id="auth-mode-subtitle">Σύνδεση στον λογαριασμό σου</p>
+
+    <label>Email</label>
+    <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="username">
+
+    <label>Κωδικός</label>
+    <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+
+    <button class="primary" id="auth-submit-btn" onclick="handleAuthSubmit()">Σύνδεση</button>
+
+    <p class="auth-toggle">
+      <span id="auth-toggle-text">Δεν έχεις λογαριασμό;</span>
+      <a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Δημιουργία λογαριασμού</a>
+    </p>
+
+    <p id="auth-error" class="auth-error"></p>
+  </div>
+</div>
+
+<div class="app-grid" id="app-grid-main" style="display:none;">
 <div class="col-left">
 
 <header class="page-header">
@@ -120,6 +146,11 @@
       </label>
       <input type="file" id="backup-file" accept=".json" onchange="importBackup(event)" style="display:none;">
       <p class="hint">Προσθέτει τις διευθύνσεις του backup στη λίστα σου (χωρίς να σβήσει τις υπάρχουσες, αγνοεί ακριβή διπλότυπα).</p>
+    </div>
+    <div class="card">
+      <label>Λογαριασμός</label>
+      <p class="hint" id="account-email-display">—</p>
+      <button class="primary" onclick="handleLogout()">Αποσύνδεση</button>
     </div>
   </div>
 
@@ -246,6 +277,59 @@
 </div>
 
 <div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAvAh2BuXKsnagviQgu2q1thgEK0lB2y10",
+  authDomain: "root-optimizer-6c327.firebaseapp.com",
+  projectId: "root-optimizer-6c327",
+  storageBucket: "root-optimizer-6c327.firebasestorage.app",
+  messagingSenderId: "298180267021",
+  appId: "1:298180267021:web:2b49a5cadb576416005944"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Εκθέτουμε τα Firebase helpers σε global scope ώστε να τα καλεί ο υπόλοιπος (non-module) κώδικας
+window.fb = {
+  auth,
+  onAuthStateChanged: (cb) => onAuthStateChanged(auth, cb),
+  signIn: (email, pw) => signInWithEmailAndPassword(auth, email, pw),
+  signUp: (email, pw) => createUserWithEmailAndPassword(auth, email, pw),
+  signOut: () => signOut(auth),
+  // Όλα τα δεδομένα του χρήστη σε ΕΝΑ document: users/{uid}
+  loadUserData: async (uid) => {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? snap.data() : null;
+  },
+  saveUserData: async (uid, data) => {
+    await setDoc(doc(db, 'users', uid), data, { merge: true });
+  },
+  // Real-time listener: καλεί το cb σε κάθε αλλαγή. Παραλείπει τις τοπικές μας εγγραφές
+  // (hasPendingWrites) ώστε να μη γίνεται echo της ίδιας μας αλλαγής.
+  subscribeUserData: (uid, cb) => {
+    return onSnapshot(doc(db, 'users', uid), { includeMetadataChanges: true }, (snap) => {
+      if (!snap.exists()) return;
+      if (snap.metadata.hasPendingWrites) return; // δική μας εγγραφή, αγνόησέ την
+      cb(snap.data());
+    });
+  }
+};
+
+// Ειδοποιούμε τον υπόλοιπο κώδικα ότι το Firebase είναι έτοιμο
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
 
 <script>
 document.documentElement.setAttribute('data-theme', localStorage.getItem('theme_v1') || 'dark');
@@ -1628,12 +1712,205 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------- Αρχικό render ----------
-renderList();
-renderApiKeyField();
-renderFuelFields();
-loadPlacesScript();
-applyTheme(loadTheme());
+// ========================================================================
+// AUTHENTICATION + CLOUD SYNC (Firebase)
+// ----------------------------------------------------------------------
+// Στρατηγική: το localStorage παραμένει ως τοπική cache (ώστε ο υπάρχων
+// συγχρονισμένος κώδικας να δουλεύει ως έχει). Στο login φορτώνουμε τα
+// δεδομένα του χρήστη από το Firestore στο localStorage. Σε κάθε αλλαγή,
+// κάνουμε (debounced) push προς το Firestore.
+// ========================================================================
+
+let currentUser = null;
+let authMode = 'login'; // 'login' | 'signup'
+let cloudSyncReady = false;
+
+// Τα localStorage keys που συγχρονίζονται στο cloud
+const SYNCED_KEYS = [
+  'addresses_v1', 'base_address_v1', 'api_key_v1',
+  'fuel_consumption_v1', 'fuel_price_v1', 'route_history_v1',
+  'theme_v1', 'sort_selected_first'
+];
+
+function collectLocalData() {
+  const data = {};
+  SYNCED_KEYS.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v !== null) data[k] = v;
+  });
+  return data;
+}
+
+function applyCloudData(data) {
+  if (!data) return;
+  SYNCED_KEYS.forEach(k => {
+    if (data[k] !== undefined && data[k] !== null) {
+      localStorage.setItem(k, data[k]);
+    }
+  });
+}
+
+let syncTimer = null;
+function scheduleCloudSync() {
+  if (!cloudSyncReady || !currentUser) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      await window.fb.saveUserData(currentUser.uid, collectLocalData());
+    } catch (e) {
+      console.error('Cloud sync failed:', e);
+    }
+  }, 1200);
+}
+
+// Τυλίγουμε τα localStorage.setItem/removeItem ώστε κάθε αλλαγή σε συγχρονισμένο key
+// να πυροδοτεί αυτόματα cloud sync — χωρίς να χρειαστεί να αλλάξουμε δεκάδες call sites.
+const _origSetItem = localStorage.setItem.bind(localStorage);
+const _origRemoveItem = localStorage.removeItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  _origSetItem(key, value);
+  if (SYNCED_KEYS.includes(key)) scheduleCloudSync();
+};
+localStorage.removeItem = function(key) {
+  _origRemoveItem(key);
+  if (SYNCED_KEYS.includes(key)) scheduleCloudSync();
+};
+
+function toggleAuthMode(e) {
+  if (e) e.preventDefault();
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  document.getElementById('auth-mode-subtitle').textContent =
+    authMode === 'login' ? 'Σύνδεση στον λογαριασμό σου' : 'Δημιουργία νέου λογαριασμού';
+  document.getElementById('auth-submit-btn').textContent =
+    authMode === 'login' ? 'Σύνδεση' : 'Δημιουργία λογαριασμού';
+  document.getElementById('auth-toggle-text').textContent =
+    authMode === 'login' ? 'Δεν έχεις λογαριασμό;' : 'Έχεις ήδη λογαριασμό;';
+  document.getElementById('auth-toggle-link').textContent =
+    authMode === 'login' ? 'Δημιουργία λογαριασμού' : 'Σύνδεση';
+  document.getElementById('auth-error').textContent = '';
+}
+
+function authErrorMessage(code) {
+  const map = {
+    'auth/invalid-email': 'Μη έγκυρο email.',
+    'auth/user-not-found': 'Δεν βρέθηκε λογαριασμός με αυτό το email.',
+    'auth/wrong-password': 'Λάθος κωδικός.',
+    'auth/invalid-credential': 'Λάθος email ή κωδικός.',
+    'auth/email-already-in-use': 'Υπάρχει ήδη λογαριασμός με αυτό το email.',
+    'auth/weak-password': 'Ο κωδικός πρέπει να είναι τουλάχιστον 6 χαρακτήρες.',
+    'auth/too-many-requests': 'Πάρα πολλές προσπάθειες. Δοκίμασε αργότερα.'
+  };
+  return map[code] || 'Κάτι πήγε στραβά. Δοκίμασε ξανά.';
+}
+
+async function handleAuthSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-submit-btn');
+  errEl.textContent = '';
+
+  if (!email || !pw) {
+    errEl.textContent = 'Συμπλήρωσε email και κωδικό.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Παρακαλώ περίμενε…';
+  try {
+    if (authMode === 'login') {
+      await window.fb.signIn(email, pw);
+    } else {
+      await window.fb.signUp(email, pw);
+    }
+    // Το onAuthStateChanged θα αναλάβει τη συνέχεια
+  } catch (e) {
+    errEl.textContent = authErrorMessage(e.code);
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Σύνδεση' : 'Δημιουργία λογαριασμού';
+  }
+}
+
+async function handleLogout() {
+  const ok = await showConfirm('Αποσύνδεση από τον λογαριασμό σου;');
+  if (!ok) return;
+  try {
+    // Τελευταίο sync πριν την αποσύνδεση
+    if (currentUser) await window.fb.saveUserData(currentUser.uid, collectLocalData());
+    await window.fb.signOut();
+  } catch (e) {
+    console.error(e);
+  }
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-grid-main').style.display = '';
+}
+
+function initAppUI() {
+  renderList();
+  renderApiKeyField();
+  renderFuelFields();
+  loadPlacesScript();
+  applyTheme(loadTheme());
+  const emailEl = document.getElementById('account-email-display');
+  if (emailEl && currentUser) emailEl.textContent = currentUser.email;
+}
+
+function refreshVisibleUI() {
+  // Ξαναρεντάρει τα δεδομένα που φαίνονται, χωρίς να πειράζει ανοιχτή φόρμα επεξεργασίας
+  selectedIds = loadSelection();
+  renderList();
+  renderApiKeyField();
+  renderFuelFields();
+  renderBaseBadge();
+  if (currentOpenPanelName() === 'history') renderHistory();
+  const themeNow = loadTheme();
+  if (document.documentElement.getAttribute('data-theme') !== themeNow) applyTheme(themeNow);
+}
+
+function startAuthFlow() {
+  window.fb.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      // Φόρτωση δεδομένων από το cloud, ΠΡΙΝ δείξουμε το app
+      try {
+        const cloudData = await window.fb.loadUserData(user.uid);
+        if (cloudData) {
+          applyCloudData(cloudData);
+        } else {
+          // Πρώτη σύνδεση: ανεβάζουμε ό,τι υπάρχει ήδη τοπικά (migration)
+          await window.fb.saveUserData(user.uid, collectLocalData());
+        }
+      } catch (e) {
+        console.error('Failed to load cloud data:', e);
+      }
+      cloudSyncReady = true;
+      showApp();
+      initAppUI();
+
+      // Real-time sync: εφαρμόζει αλλαγές από άλλες συσκευές ζωντανά
+      window.fb.subscribeUserData(user.uid, (remoteData) => {
+        applyCloudData(remoteData);
+        refreshVisibleUI();
+      });
+    } else {
+      currentUser = null;
+      cloudSyncReady = false;
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app-grid-main').style.display = 'none';
+    }
+  });
+}
+
+// Περιμένουμε το Firebase module να φορτώσει
+if (window.fb) {
+  startAuthFlow();
+} else {
+  window.addEventListener('firebase-ready', startAuthFlow);
+}
 
 // ---------- Service Worker ----------
 if ('serviceWorker' in navigator) {
