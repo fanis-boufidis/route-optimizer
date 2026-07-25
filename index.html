@@ -34,6 +34,9 @@
   <button class="tab-btn active" data-tab="list">Λίστα</button>
   <button class="tab-btn" data-tab="add">+ Προσθήκη</button>
   <button class="tab-btn" data-tab="import">Import</button>
+  <button class="tab-btn tab-btn--icon" data-tab="history" aria-label="Ιστορικό">
+    <span class="icon icon-md" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+  </button>
   <button class="tab-btn tab-btn--icon" data-tab="settings" aria-label="Ρυθμίσεις">
     <span class="icon icon-md" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
   </button>
@@ -121,6 +124,18 @@
       Αν εξάγεις από Excel/Google Sheets σε CSV, αντικατέστησε τα κόμματα με "|".
     </p>
     <button class="primary" onclick="importBulk()">Εισαγωγή Διευθύνσεων</button>
+  </div>
+</div>
+
+<!-- ==================== TAB: ΙΣΤΟΡΙΚΟ ΔΙΑΔΡΟΜΩΝ ==================== -->
+<div class="panel" id="panel-history">
+  <div id="history-header-row" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+    <div id="history-count-badge" class="count-badge">0 διαδρομές</div>
+    <button class="filter-toggle" onclick="clearHistory()">Καθαρισμός Ιστορικού</button>
+  </div>
+  <div id="history-list"></div>
+  <div id="history-empty-state" style="display:none;" class="hint">
+    Δεν έχεις δημιουργήσει ακόμα καμία διαδρομή. Θα εμφανίζεται εδώ κάθε φορά που πατάς "Δημιούργησε Διαδρομή".
   </div>
 </div>
 
@@ -275,6 +290,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('panel-' + targetTab).classList.add('active');
     if (targetTab === 'list') renderList();
+    if (targetTab === 'history') renderHistory();
     if (targetTab === 'settings' && baseCoords && window.google && window.google.maps) {
       showMapPicker('base-map', 'base-map-hint', baseCoords, (c) => { baseCoords = c; });
     }
@@ -608,6 +624,99 @@ function importBackup(event) {
     }
   };
   reader.readAsText(file);
+}
+
+// ---------- Ιστορικό Διαδρομών ----------
+const HISTORY_KEY = 'route_history_v1';
+const HISTORY_MAX_ENTRIES = 50;
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveHistoryList(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function addHistoryEntry(entry) {
+  const list = loadHistory();
+  list.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...entry });
+  if (list.length > HISTORY_MAX_ENTRIES) list.length = HISTORY_MAX_ENTRIES;
+  saveHistoryList(list);
+}
+
+function formatHistoryDate(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  const datePart = isToday ? 'Σήμερα' : d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const timePart = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+  return datePart + ', ' + timePart;
+}
+
+async function deleteHistoryEntry(id) {
+  const ok = await showConfirm('Διαγραφή αυτής της διαδρομής από το ιστορικό;');
+  if (!ok) return;
+  const list = loadHistory().filter(h => h.id !== id);
+  saveHistoryList(list);
+  renderHistory();
+  showToast('Διαγράφηκε από το ιστορικό');
+}
+
+async function clearHistory() {
+  const list = loadHistory();
+  if (list.length === 0) {
+    showToast('Το ιστορικό είναι ήδη άδειο');
+    return;
+  }
+  const ok = await showConfirm('Διαγραφή ΟΛΟΥ του ιστορικού διαδρομών; Δεν μπορεί να αναιρεθεί.');
+  if (!ok) return;
+  saveHistoryList([]);
+  renderHistory();
+  showToast('Το ιστορικό καθαρίστηκε');
+}
+
+function toggleHistoryStops(id) {
+  const el = document.getElementById('hist-stops-' + id);
+  if (el) el.classList.toggle('visible');
+}
+
+function renderHistory() {
+  const list = loadHistory();
+  const listEl = document.getElementById('history-list');
+  const emptyEl = document.getElementById('history-empty-state');
+  const badgeEl = document.getElementById('history-count-badge');
+
+  badgeEl.textContent = list.length + ' διαδρομ' + (list.length === 1 ? 'ή' : 'ές');
+
+  if (list.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = list.map(h => `
+    <div class="history-item">
+      <div class="history-item-top">
+        <div>
+          <div class="history-date">${formatHistoryDate(h.timestamp)}</div>
+          <div class="history-summary">${h.distanceKm} km · ${h.durationMin} λεπτά · ${h.stops.length} στάσεις</div>
+        </div>
+        <button class="icon-btn delete" onclick="deleteHistoryEntry('${h.id}')" aria-label="Διαγραφή">${icon('trash', 'sm')}</button>
+      </div>
+      <button class="history-toggle-btn" onclick="toggleHistoryStops('${h.id}')">Δες τις στάσεις</button>
+      <div class="history-stops" id="hist-stops-${h.id}">
+        <div class="history-stop-line">🏠 Αφετηρία: ${escapeHtml(h.baseAddress)}</div>
+        ${h.stops.map((s, i) => `<div class="history-stop-line">${i + 1}. ${escapeHtml(s.name)} — ${escapeHtml(s.address)}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
 }
 
 // ---------- Custom confirm modal (αντί για native confirm()) ----------
@@ -1151,6 +1260,13 @@ async function generateRoute() {
     const durationMin = Math.round(parseInt(route.duration) / 60);
     const distanceKm = (route.distanceMeters / 1000).toFixed(1);
     const mapsUrl = buildMapsUrl(base, orderedStops);
+
+    addHistoryEntry({
+      timestamp: Date.now(),
+      baseAddress: base.address,
+      distanceKm, durationMin,
+      stops: orderedStops.map(a => ({ name: a.name, address: a.address }))
+    });
 
     renderResultState(`
       <h1 style="margin-bottom:18px;">Βέλτιστη Διαδρομή</h1>
