@@ -1,4 +1,4 @@
-const CACHE_NAME = 'route-optimizer-v60';
+const CACHE_NAME = 'route-optimizer-v61';
 
 // Τα βασικά αρχεία που κάνουμε cache ώστε το app να ανοίγει γρήγορα / offline
 const APP_SHELL = [
