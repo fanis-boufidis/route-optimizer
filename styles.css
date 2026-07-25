@@ -929,7 +929,6 @@ body:has(#footer-bar.visible) #toast.show {
   display: flex;
   align-items: stretch;
   gap: 18px;
-  height: 100%;
 }
 .edit-banner-actions > button:not(.save-link) {
   display: flex;
