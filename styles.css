@@ -1159,14 +1159,15 @@ body:has(#footer-bar.visible) #toast.show {
 
   /* Τα 5 "δεξιά" panels (Προσθήκη/Ρυθμίσεις/Import/Ιστορικό/Αποτέλεσμα) ελέγχονται από το
      body[data-right-panel="..."] attribute, ΟΧΙ από το κοινό .panel.active σύστημα (που αφορά μόνο mobile). */
-  #panel-add, #panel-settings, #panel-import, #panel-history, #panel-result {
+  #panel-add, #panel-settings, #panel-import, #panel-history, #panel-result, #panel-account {
     display: none !important;
   }
   body[data-right-panel="add"] #panel-add,
   body[data-right-panel="settings"] #panel-settings,
   body[data-right-panel="import"] #panel-import,
   body[data-right-panel="history"] #panel-history,
-  body[data-right-panel="result"] #panel-result {
+  body[data-right-panel="result"] #panel-result,
+  body[data-right-panel="account"] #panel-account {
     display: block !important;
   }
 
