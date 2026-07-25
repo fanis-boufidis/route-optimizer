@@ -36,6 +36,10 @@
 
     <button class="primary" id="auth-submit-btn" onclick="handleAuthSubmit()">Σύνδεση</button>
 
+    <p class="auth-forgot" id="auth-forgot-row">
+      <a href="#" onclick="handleForgotPassword(event)">Ξέχασα τον κωδικό μου</a>
+    </p>
+
     <p class="auth-toggle">
       <span id="auth-toggle-text">Δεν έχεις λογαριασμό;</span>
       <a href="#" id="auth-toggle-link" onclick="toggleAuthMode(event)">Δημιουργία λογαριασμού</a>
@@ -322,7 +326,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut,
   updateEmail, updatePassword, deleteUser,
-  EmailAuthProvider, reauthenticateWithCredential
+  EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, onSnapshot, deleteDoc
@@ -348,6 +352,7 @@ window.fb = {
   signIn: (email, pw) => signInWithEmailAndPassword(auth, email, pw),
   signUp: (email, pw) => createUserWithEmailAndPassword(auth, email, pw),
   signOut: () => signOut(auth),
+  resetPassword: (email) => sendPasswordResetEmail(auth, email),
   // Όλα τα δεδομένα του χρήστη σε ΕΝΑ document: users/{uid}
   loadUserData: async (uid) => {
     const snap = await getDoc(doc(db, 'users', uid));
@@ -1828,6 +1833,24 @@ localStorage.removeItem = function(key) {
   if (SYNCED_KEYS.includes(key)) scheduleCloudSync();
 };
 
+async function handleForgotPassword(e) {
+  if (e) e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const errEl = document.getElementById('auth-error');
+  if (!email) {
+    errEl.textContent = 'Γράψε πρώτα το email σου παραπάνω.';
+    return;
+  }
+  try {
+    await window.fb.resetPassword(email);
+    errEl.style.color = 'var(--text-secondary)';
+    errEl.textContent = 'Στάλθηκε email επαναφοράς κωδικού. Έλεγξε τα εισερχόμενά σου.';
+  } catch (err) {
+    errEl.style.color = '';
+    errEl.textContent = authErrorMessage(err.code);
+  }
+}
+
 function toggleAuthMode(e) {
   if (e) e.preventDefault();
   authMode = authMode === 'login' ? 'signup' : 'login';
@@ -1840,6 +1863,7 @@ function toggleAuthMode(e) {
   document.getElementById('auth-toggle-link').textContent =
     authMode === 'login' ? 'Δημιουργία λογαριασμού' : 'Σύνδεση';
   document.getElementById('auth-error').textContent = '';
+  document.getElementById('auth-forgot-row').style.display = authMode === 'login' ? '' : 'none';
 }
 
 function authErrorMessage(code) {
