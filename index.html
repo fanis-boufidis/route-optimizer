@@ -80,18 +80,17 @@
     <div class="edit-banner">
       <span>Ρυθμίσεις</span>
       <div class="edit-banner-actions">
-        <button class="save-link" onclick="saveAllSettings()">Αποθήκευση Όλων</button>
+        <button class="save-link" id="settings-save-btn" onclick="saveAllSettings()">Αποθήκευση Όλων</button>
         <button onclick="closeRightPanel()">Άκυρο</button>
       </div>
     </div>
     <div class="card">
       <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
-      <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off">
+      <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off" oninput="markSettingsDirty()">
       <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
       <div id="base-map" class="map-picker"></div>
       <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
       <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
-      <button class="primary" onclick="saveBaseAddress()">Αποθήκευση</button>
     </div>
     <div class="card">
       <label>Εμφάνιση</label>
@@ -99,17 +98,15 @@
     </div>
     <div class="card">
       <label>Google Maps API Key *</label>
-      <input type="text" id="api-key" placeholder="Το API key σου">
+      <input type="text" id="api-key" placeholder="Το API key σου" oninput="markSettingsDirty()">
       <p class="hint">Το ίδιο key που δοκίμασες στο test αρχείο. Αποθηκεύεται μόνο τοπικά στο κινητό σου.</p>
-      <button class="primary" onclick="saveApiKey()">Αποθήκευση Key</button>
     </div>
     <div class="card">
       <label>Κατανάλωση Καυσίμου (προαιρετικό)</label>
-      <input type="text" id="fuel-consumption" placeholder="π.χ. 7.5 (λίτρα / 100χλμ)">
+      <input type="text" id="fuel-consumption" placeholder="π.χ. 7.5 (λίτρα / 100χλμ)" oninput="markSettingsDirty()">
       <label style="margin-top:14px;">Τιμή Καυσίμου (€/λίτρο)</label>
-      <input type="text" id="fuel-price" placeholder="π.χ. 1.75">
+      <input type="text" id="fuel-price" placeholder="π.χ. 1.75" oninput="markSettingsDirty()">
       <p class="hint">Χρησιμοποιείται για εκτίμηση κόστους καυσίμου στα Στατιστικά (tab Ιστορικό). Άφησέ τα κενά αν δεν θες αυτή την εκτίμηση.</p>
-      <button class="primary" onclick="saveFuelSettings()">Αποθήκευση</button>
     </div>
     <div class="card">
       <label>Backup Διευθύνσεων</label>
@@ -181,16 +178,16 @@
     <div id="edit-banner" class="edit-banner">
       <span id="edit-banner-title">Προσθήκη Διεύθυνσης</span>
       <div class="edit-banner-actions">
-        <button class="save-link" onclick="addSingleAddress()">Αποθήκευση</button>
+        <button class="save-link" id="address-save-btn" onclick="addSingleAddress()">Αποθήκευση</button>
         <button onclick="cancelEdit()">Άκυρο</button>
       </div>
     </div>
     <div class="card">
       <label>Όνομα *</label>
-      <input type="text" id="f-name" placeholder="π.χ. Γιάννης Παπαδόπουλος">
+      <input type="text" id="f-name" placeholder="π.χ. Γιάννης Παπαδόπουλος" oninput="markFormDirty()">
 
       <label>Διεύθυνση *</label>
-      <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off">
+      <input type="text" id="f-address" placeholder="π.χ. Τσιμισκή 50, Θεσσαλονίκη" autocomplete="off" oninput="markFormDirty()">
 
       <div class="map-field-group">
         <div class="mfg-map"><div id="f-map" class="map-picker"></div></div>
@@ -216,17 +213,15 @@
       </div>
 
       <label>Τηλέφωνο</label>
-      <input type="text" id="f-phone" placeholder="π.χ. 6971234567">
+      <input type="text" id="f-phone" placeholder="π.χ. 6971234567" oninput="markFormDirty()">
 
       <label>Σημειώσεις</label>
-      <textarea id="f-notes" rows="2" placeholder="π.χ. Καλύτερα πρωί, κουδούνι 2ος όροφος"></textarea>
+      <textarea id="f-notes" rows="2" placeholder="π.χ. Καλύτερα πρωί, κουδούνι 2ος όροφος" oninput="markFormDirty()"></textarea>
 
       <label>Προειδοποίηση Δρόμου (προαιρετικό)</label>
-      <textarea id="f-road-warning" rows="2" placeholder="π.χ. Έργα στην οδό, μονόδρομος που δεν έχει ενημερωθεί στο Google Maps"></textarea>
+      <textarea id="f-road-warning" rows="2" placeholder="π.χ. Έργα στην οδό, μονόδρομος που δεν έχει ενημερωθεί στο Google Maps" oninput="markFormDirty()"></textarea>
       <p class="hint">Εμφανίζεται με προειδοποιητική σήμανση στη λίστα και στο αποτέλεσμα διαδρομής.</p>
       <button type="button" class="btn-secondary" id="f-obstacle-btn" style="display:none;" onclick="markObstacle()">Σημείωσε το εμπόδιο στον χάρτη</button>
-
-      <button class="primary" id="add-submit-btn" onclick="addSingleAddress()">Προσθήκη Διεύθυνσης</button>
     </div>
   </div>
 
@@ -293,6 +288,45 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+// ---------- Έλεγχος μη αποθηκευμένων αλλαγών ----------
+let formDirty = false;
+let settingsDirty = false;
+
+function markFormDirty() { formDirty = true; }
+function markSettingsDirty() { settingsDirty = true; }
+
+function shakeButton(id) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.classList.remove('shake');
+  void btn.offsetWidth; // force reflow ώστε να ξαναπαίξει το animation
+  btn.classList.add('shake');
+  showToast('Έχεις μη αποθηκευμένες αλλαγές — πάτησε "Αποθήκευση" πρώτα');
+  setTimeout(() => btn.classList.remove('shake'), 500);
+}
+
+function currentOpenPanelName() {
+  if (isDesktopLayout()) {
+    return document.body.getAttribute('data-right-panel');
+  }
+  const activeBtn = document.querySelector('.tab-btn.active');
+  return activeBtn ? activeBtn.dataset.tab : null;
+}
+
+// Επιστρέφει false (και κάνει shake) αν υπάρχουν μη αποθηκευμένες αλλαγές στο τρέχον ανοιχτό panel
+function checkUnsavedAndWarn() {
+  const current = currentOpenPanelName();
+  if (current === 'add' && formDirty) {
+    shakeButton('address-save-btn');
+    return false;
+  }
+  if (current === 'settings' && settingsDirty) {
+    shakeButton('settings-save-btn');
+    return false;
+  }
+  return true;
+}
+
 // ---------- Tabs ----------
 function isDesktopLayout() {
   return window.matchMedia('(min-width: 900px)').matches;
@@ -309,6 +343,8 @@ function closeDesktopPanel() {
 // Κλείνει ό,τι είναι ανοιχτό δεξιά (desktop) ή γυρνάει στη Λίστα (mobile).
 // Χρησιμοποιείται από τα κουμπιά "Άκυρο" σε Ρυθμίσεις/Import/Ιστορικό/Προσθήκη.
 function closeRightPanel() {
+  if (!checkUnsavedAndWarn()) return;
+
   if (isDesktopLayout()) {
     closeDesktopPanel();
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -323,6 +359,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const targetTab = btn.dataset.tab;
     const desktop = isDesktopLayout();
+
+    if (!checkUnsavedAndWarn()) return;
 
     if (desktop) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -359,9 +397,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 let editingId = null;
 
 function editAddress(id) {
+  if (!checkUnsavedAndWarn()) return;
+
   const a = loadAddresses().find(x => x.id === id);
   if (!a) return;
 
+  formDirty = false;
   editingId = id;
   fCoords = (a.lat != null && a.lng != null) ? { lat: a.lat, lng: a.lng } : null;
   fExitCoords = (a.exitLat != null && a.exitLng != null) ? { lat: a.exitLat, lng: a.exitLng } : null;
@@ -386,7 +427,6 @@ function editAddress(id) {
   document.getElementById('f-road-warning').value = a.roadWarning || '';
 
   document.getElementById('edit-banner-title').textContent = 'Επεξεργασία διεύθυνσης';
-  document.getElementById('add-submit-btn').textContent = 'Αποθήκευση Αλλαγών';
 
   document.querySelector('.tab-btn[data-tab="add"]').click();
 
@@ -407,11 +447,18 @@ function editAddress(id) {
 }
 
 function cancelEdit() {
+  if (formDirty) {
+    shakeButton('address-save-btn');
+    return;
+  }
   editingId = null;
   fCoords = null;
   fMidPoints = [];
   if (isDesktopLayout()) {
-    closeRightPanel();
+    closeDesktopPanel();
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const listBtn = document.querySelector('.tab-btn[data-tab="list"]');
+    if (listBtn) listBtn.classList.add('active');
   }
   fExitCoords = null;
   removeObstacleMarker();
@@ -421,7 +468,6 @@ function cancelEdit() {
   document.getElementById('f-notes').value = '';
   document.getElementById('f-road-warning').value = '';
   document.getElementById('edit-banner-title').textContent = 'Προσθήκη Διεύθυνσης';
-  document.getElementById('add-submit-btn').textContent = 'Προσθήκη Διεύθυνσης';
   document.getElementById('f-map').classList.remove('visible');
   document.getElementById('f-map-hint').style.display = 'none';
   document.getElementById('f-mid-add-btn').style.display = 'none';
@@ -465,6 +511,7 @@ function addSingleAddress() {
     }
     saveAddresses(addresses);
     showToast('Ενημερώθηκε: ' + name);
+    formDirty = false;
     cancelEdit();
   } else {
     addresses.push({
@@ -480,6 +527,7 @@ function addSingleAddress() {
     });
     saveAddresses(addresses);
     showToast('Προστέθηκε: ' + name);
+    formDirty = false;
     fCoords = null;
     fMidPoints = [];
     fExitCoords = null;
@@ -977,6 +1025,7 @@ function saveAllSettings() {
   const baseOk = saveBaseAddress(true);
   const keyOk = saveApiKey(true);
   saveFuelSettings(true);
+  settingsDirty = false;
 
   const missing = [];
   if (!baseOk) missing.push('αφετηρία');

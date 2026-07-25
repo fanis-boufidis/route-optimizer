@@ -896,15 +896,21 @@ body:has(#footer-bar.visible) #toast.show {
 /* --- Edit mode banner --- */
 .edit-banner {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 0 0 0 18px;
   margin-bottom: 14px;
   font-size: var(--text-sm);
   color: var(--text);
+  min-height: 56px;
+  overflow: hidden;
+}
+.edit-banner > span {
+  display: flex;
+  align-items: center;
 }
 @media (min-width: 900px) {
   .edit-banner {
@@ -921,16 +927,35 @@ body:has(#footer-bar.visible) #toast.show {
 
 .edit-banner-actions {
   display: flex;
+  align-items: stretch;
+  gap: 18px;
+  height: 100%;
+}
+.edit-banner-actions > button:not(.save-link) {
+  display: flex;
   align-items: center;
-  gap: 16px;
+  padding-right: 18px;
 }
 
 .edit-banner-actions .save-link {
   background: var(--accent-bg);
   color: var(--accent-text);
   text-decoration: none;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
+  padding: 0 22px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+.edit-banner-actions .save-link.shake {
+  animation: saveBtnShake 0.5s ease;
+}
+
+@keyframes saveBtnShake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
 }
 
 /* --- Select all / clear buttons row --- */
