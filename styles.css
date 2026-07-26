@@ -1460,3 +1460,45 @@ body:has(#footer-bar.visible) #toast.show {
   margin-top: 10px;
   margin-left: 16px;
 }
+
+/* ==================== ΠΡΟΣΒΑΣΙΜΟΤΗΤΑ ==================== */
+
+/* Ορατό focus outline για πλοήγηση με πληκτρολόγιο (μόνο σε keyboard, όχι mouse) */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.tab-btn:focus-visible,
+.filter-toggle:focus-visible,
+.addr-item:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Μεγαλύτερες περιοχές αφής σε κινητό (>=44px κατά WCAG) */
+@media (max-width: 899px) {
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .filter-toggle {
+    min-height: 40px;
+  }
+  .tab-btn {
+    min-height: 44px;
+  }
+}
+
+/* Σεβασμός prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
