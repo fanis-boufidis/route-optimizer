@@ -1127,10 +1127,13 @@ function renderBaseBadge() {
   const base = loadBaseAddress();
   const badge = document.getElementById('base-badge');
   const input = document.getElementById('base-address');
+  // Μην πατάς το input αν ο χρήστης το επεξεργάζεται αυτή τη στιγμή (ανοιχτές Ρυθμίσεις)
+  const editingSettings = (typeof currentOpenPanelName === 'function') && currentOpenPanelName() === 'settings';
+
   if (base && base.address) {
     badge.innerHTML = icon('home', 'md') + '<span><span class="badge-label">Αφετηρία:</span> ' + escapeHtml(base.address) + '</span>';
     badge.classList.add('base-set');
-    input.value = base.address;
+    if (!editingSettings) input.value = base.address;
     if (base.lat != null && base.lng != null) {
       baseCoords = { lat: base.lat, lng: base.lng };
     }
@@ -1991,9 +1994,8 @@ function refreshVisibleUI() {
     renderApiKeyField();
     renderFuelFields();
   }
-  if (openPanel !== 'add') {
-    renderBaseBadge();
-  }
+  // Το badge αφετηρίας (στη λίστα) ενημερώνεται πάντα· το input προστατεύεται μέσα στην ίδια τη renderBaseBadge
+  renderBaseBadge();
 
   if (openPanel === 'history') renderHistory();
 
