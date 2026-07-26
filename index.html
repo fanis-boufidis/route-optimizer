@@ -315,6 +315,11 @@
   </div>
 </div>
 
+<div id="offline-banner" role="status" aria-live="polite">
+  <span class="offline-dot"></span>
+  Εκτός σύνδεσης — οι αλλαγές θα συγχρονιστούν μόλις επανέλθει το internet
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -326,7 +331,8 @@ import {
   EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, onSnapshot, deleteDoc
+  getFirestore, doc, getDoc, setDoc, onSnapshot, deleteDoc,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -340,7 +346,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// Firestore με offline persistence: κρατάει τα δεδομένα τοπικά και συγχρονίζει
+// αυτόματα τις αλλαγές μόλις επανέλθει η σύνδεση. Το multi-tab manager επιτρέπει
+// πολλαπλά ανοιχτά tabs χωρίς σύγκρουση.
+let db;
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+} catch (e) {
+  // Fallback αν αποτύχει το persistence (π.χ. private browsing)
+  db = getFirestore(app);
+}
 
 // Εκθέτουμε τα Firebase helpers σε global scope ώστε να τα καλεί ο υπόλοιπος (non-module) κώδικας
 window.fb = {
@@ -2199,6 +2217,25 @@ if (window.fb) {
 } else {
   window.addEventListener('firebase-ready', startAuthFlow);
 }
+
+// ---------- Ανίχνευση σύνδεσης (online/offline) ----------
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (navigator.onLine) {
+    banner.classList.remove('visible');
+  } else {
+    banner.classList.add('visible');
+  }
+}
+window.addEventListener('online', () => {
+  updateOnlineStatus();
+  showToast('Επανήλθε η σύνδεση — συγχρονισμός…');
+});
+window.addEventListener('offline', () => {
+  updateOnlineStatus();
+});
+updateOnlineStatus();
 
 // ---------- Service Worker ----------
 if ('serviceWorker' in navigator) {
