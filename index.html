@@ -82,6 +82,7 @@
     <button id="sort-toggle-btn" class="filter-toggle" onclick="toggleSortMode()">Επιλεγμένα πρώτα</button>
     <button class="filter-toggle" onclick="selectAllVisible()">Επιλογή Όλων</button>
     <button class="filter-toggle" onclick="clearAllSelection()">Καθαρισμός Επιλογής</button>
+    <button id="delete-selected-btn" class="filter-toggle filter-toggle--danger" style="display:none;" onclick="deleteSelectedAddresses()">Διαγραφή Επιλεγμένων</button>
   </div>
   <div id="count-badge" class="count-badge">0 διευθύνσεις</div>
   <div id="address-list"></div>
@@ -954,12 +955,59 @@ function renderHistory() {
         <button class="icon-btn delete" onclick="deleteHistoryEntry('${h.id}')" aria-label="Διαγραφή">${icon('trash', 'sm')}</button>
       </div>
       <button class="history-toggle-btn" onclick="toggleHistoryStops('${h.id}')">Δες τις στάσεις</button>
+      <button class="history-view-btn" onclick="viewHistoryRoute('${h.id}')">Προβολή διαδρομής</button>
       <div class="history-stops" id="hist-stops-${h.id}">
         <div class="history-stop-line">🏠 Αφετηρία: ${escapeHtml(h.baseAddress)}</div>
         ${h.stops.map((s, i) => `<div class="history-stop-line">${i + 1}. ${escapeHtml(s.name)} — ${escapeHtml(s.address)}</div>`).join('')}
       </div>
     </div>
   `).join('');
+}
+
+function viewHistoryRoute(id) {
+  const h = loadHistory().find(x => x.id === id);
+  if (!h) return;
+
+  openResult();
+
+  const mapsBtn = h.mapsUrl
+    ? `<a class="btn-secondary" style="background:var(--accent-bg); color:var(--accent-text); border-color:var(--accent-bg);" href="${h.mapsUrl}" target="_blank" rel="noopener">
+        ${icon('external', 'sm')} Άνοιγμα στο Google Maps
+      </a>`
+    : `<p class="hint">Αυτή η διαδρομή αποθηκεύτηκε πριν προστεθεί η δυνατότητα επαναπροβολής στο Google Maps.</p>`;
+
+  renderResultState(`
+    <h1 style="margin-bottom:6px;">Διαδρομή</h1>
+    <p class="hint" style="margin:0 0 18px;">${formatHistoryDate(h.timestamp)}</p>
+    <div class="result-summary">
+      <div class="result-stat">
+        <div class="result-stat-value">${h.distanceKm} km</div>
+        <div class="result-stat-label">Απόσταση</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-value">${h.durationMin} λεπτά</div>
+        <div class="result-stat-label">Διάρκεια</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-value">${h.stops.length}</div>
+        <div class="result-stat-label">Στάσεις</div>
+      </div>
+    </div>
+
+    ${mapsBtn}
+
+    <p class="hint" style="margin:16px 0 10px;">Αφετηρία: ${escapeHtml(h.baseAddress)}</p>
+
+    ${h.stops.map((s, i) => `
+      <div class="result-stop">
+        <div class="result-stop-num">${i + 1}</div>
+        <div class="result-stop-info">
+          <div class="result-stop-name">${escapeHtml(s.name)}</div>
+          <div class="result-stop-address">${escapeHtml(s.address)}</div>
+        </div>
+      </div>
+    `).join('')}
+  `);
 }
 
 // ---------- Ρυθμίσεις: Καύσιμο ----------
@@ -1455,7 +1503,10 @@ function updateFooterBar() {
 
   const bar = document.getElementById('footer-bar');
   const countEl = document.getElementById('footer-count');
+  const delBtn = document.getElementById('delete-selected-btn');
   const n = selectedIds.size;
+
+  if (delBtn) delBtn.style.display = n > 0 ? '' : 'none';
 
   if (n === 0) {
     bar.classList.remove('visible');
@@ -1620,7 +1671,7 @@ async function generateRoute() {
     addHistoryEntry({
       timestamp: Date.now(),
       baseAddress: base.address,
-      distanceKm, durationMin,
+      distanceKm, durationMin, mapsUrl,
       stops: orderedStops.map(a => ({ name: a.name, address: a.address }))
     });
 
@@ -1703,6 +1754,23 @@ function clearAllSelection() {
   selectedIds.clear();
   saveSelection(selectedIds);
   renderList();
+}
+
+async function deleteSelectedAddresses() {
+  const n = selectedIds.size;
+  if (n === 0) return;
+  const ok = await showConfirm(
+    'Οριστική διαγραφή ' + n + ' επιλεγμ' + (n === 1 ? 'ένης διεύθυνσης' : 'ένων διευθύνσεων') + ' από το Address Book; Δεν αναιρείται.',
+    'Διαγραφή'
+  );
+  if (!ok) return;
+
+  const remaining = loadAddresses().filter(a => !selectedIds.has(a.id));
+  saveAddresses(remaining);
+  selectedIds.clear();
+  saveSelection(selectedIds);
+  renderList();
+  showToast(n + ' διευθύνσεις διαγράφηκαν');
 }
 
 function toggleSortMode() {
