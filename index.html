@@ -1980,13 +1980,23 @@ function initAppUI() {
 }
 
 function refreshVisibleUI() {
-  // Ξαναρεντάρει τα δεδομένα που φαίνονται, χωρίς να πειράζει ανοιχτή φόρμα επεξεργασίας
+  const openPanel = currentOpenPanelName();
+
+  // Λίστα: ενημερώνεται πάντα (δεν γράφει ο χρήστης σε αυτή)
   selectedIds = loadSelection();
   renderList();
-  renderApiKeyField();
-  renderFuelFields();
-  renderBaseBadge();
-  if (currentOpenPanelName() === 'history') renderHistory();
+
+  // Ρυθμίσεις/φόρμα: ΜΗΝ πατάς πάνω στα πεδία αν ο χρήστης τα επεξεργάζεται αυτή τη στιγμή
+  if (openPanel !== 'settings') {
+    renderApiKeyField();
+    renderFuelFields();
+  }
+  if (openPanel !== 'add') {
+    renderBaseBadge();
+  }
+
+  if (openPanel === 'history') renderHistory();
+
   const themeNow = loadTheme();
   if (document.documentElement.getAttribute('data-theme') !== themeNow) applyTheme(themeNow);
 }
