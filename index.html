@@ -77,7 +77,7 @@
 <!-- ==================== TAB: ΛΙΣΤΑ ==================== -->
 <div class="panel active" id="panel-list">
   <div id="base-badge"></div>
-  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα…" oninput="renderList()" style="margin-bottom:10px;">
+  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα…" oninput="renderList()" aria-label="Αναζήτηση διευθύνσεων με όνομα" style="margin-bottom:10px;">
   <div class="filter-row">
     <button id="sort-toggle-btn" class="filter-toggle" onclick="toggleSortMode()">Επιλεγμένα πρώτα</button>
     <button class="filter-toggle" onclick="selectAllVisible()">Επιλογή Όλων</button>
@@ -305,7 +305,7 @@
 </div><!-- /col-right -->
 </div><!-- /app-grid -->
 
-<div id="confirm-modal" class="modal-overlay">
+<div id="confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-message">
   <div class="modal-box">
     <p id="confirm-message"></p>
     <div class="modal-actions">
@@ -1098,9 +1098,13 @@ function showConfirm(message, confirmLabel, alertOnly) {
   return new Promise(resolve => {
     resolveConfirmFn = resolve;
     document.getElementById('confirm-message').textContent = message;
-    document.getElementById('confirm-ok-btn').textContent = confirmLabel || 'Επιβεβαίωση';
+    const okBtn = document.getElementById('confirm-ok-btn');
+    okBtn.textContent = confirmLabel || 'Επιβεβαίωση';
     document.getElementById('confirm-cancel-btn').style.display = alertOnly ? 'none' : '';
-    document.getElementById('confirm-modal').classList.add('visible');
+    const modal = document.getElementById('confirm-modal');
+    modal.classList.add('visible');
+    // Προσβασιμότητα: εστίαση στο κύριο κουμπί ώστε να δουλεύει Enter/Space & keyboard nav
+    setTimeout(() => okBtn.focus(), 30);
   });
 }
 
@@ -1109,6 +1113,16 @@ function resolveConfirm(result) {
   if (resolveConfirmFn) resolveConfirmFn(result);
   resolveConfirmFn = null;
 }
+
+// Escape κλείνει το modal (= Άκυρο), κλικ έξω από το κουτί επίσης
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('confirm-modal').classList.contains('visible')) {
+    resolveConfirm(false);
+  }
+});
+document.getElementById('confirm-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'confirm-modal') resolveConfirm(false);
+});
 
 // ---------- Διαγραφή ----------
 async function deleteAddress(id) {
@@ -1693,12 +1707,10 @@ async function generateRoute() {
     const data = await res.json();
 
     if (!res.ok) {
-      const errMsg = (data.error && data.error.message) || 'Άγνωστο σφάλμα';
       renderResultState(`
         <div class="state-box">
           <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
-          Κάτι πήγε στραβά.<br>${escapeHtml(errMsg)}
-          <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+          ${friendlyRouteError(data, res.status)}
         </div>
       `);
       return;
@@ -1709,8 +1721,7 @@ async function generateRoute() {
       renderResultState(`
         <div class="state-box">
           <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
-          Δεν βρέθηκε διαδρομή για αυτές τις διευθύνσεις.
-          <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
+          Δεν βρέθηκε διαδρομή για αυτές τις διευθύνσεις. Ίσως κάποια διεύθυνση δεν αναγνωρίζεται ή δεν είναι προσβάσιμη με αυτοκίνητο. Δοκίμασε να ορίσεις πινέζα (συντεταγμένες) στις προβληματικές διευθύνσεις.
         </div>
       `);
       return;
@@ -1779,10 +1790,31 @@ async function generateRoute() {
     renderResultState(`
       <div class="state-box">
         <div class="state-error-icon">${icon('errorIcon', 'lg')}</div>
-        Σφάλμα δικτύου: ${escapeHtml(err.message)}
+        Δεν ήταν δυνατή η σύνδεση. Έλεγξε τη σύνδεσή σου στο internet και δοκίμασε ξανά.
       </div>
     `);
   }
+}
+
+// Μεταφράζει τα σφάλματα του Google Routes API σε φιλικά μηνύματα
+function friendlyRouteError(data, status) {
+  const raw = (data && data.error && data.error.message) || '';
+  const lower = raw.toLowerCase();
+
+  if (status === 403 || lower.includes('api key') || lower.includes('permission') || lower.includes('not authorized')) {
+    return 'Πρόβλημα με το API key. Έλεγξε στις Ρυθμίσεις ότι το key είναι σωστό και ότι έχεις ενεργοποιήσει το Routes API στο Google Cloud.';
+  }
+  if (lower.includes('not found') || lower.includes('could not') || lower.includes('geocode') || lower.includes('waypoint')) {
+    return 'Κάποια διεύθυνση δεν αναγνωρίστηκε. Δοκίμασε να την ξαναγράψεις πιο συγκεκριμένα ή όρισέ της πινέζα (συντεταγμένες) στη φόρμα επεξεργασίας.';
+  }
+  if (status === 429 || lower.includes('quota') || lower.includes('rate')) {
+    return 'Ξεπεράστηκε το όριο κλήσεων για σήμερα. Δοκίμασε ξανά αργότερα.';
+  }
+  if (lower.includes('billing')) {
+    return 'Πρόβλημα χρέωσης στο Google Cloud. Έλεγξε ότι το billing είναι ενεργό για το project σου.';
+  }
+  // Fallback: γενικό αλλά ευγενικό
+  return 'Κάτι πήγε στραβά με τον υπολογισμό της διαδρομής. Δοκίμασε ξανά — αν συνεχίσει, έλεγξε τις διευθύνσεις και το API key στις Ρυθμίσεις.';
 }
 
 // ---------- Render λίστας ----------
@@ -1868,7 +1900,8 @@ function renderList() {
   listEl.innerHTML = addresses.map(a => `
     <div class="addr-item ${selectedIds.has(a.id) ? 'selected' : ''}" data-row-id="${a.id}" onclick="handleRowClick(event, '${a.id}')" style="cursor:pointer;">
       <input type="checkbox" data-id="${a.id}" ${selectedIds.has(a.id) ? 'checked' : ''}
-             onchange="toggleSelection('${a.id}', this.checked)">
+             onchange="toggleSelection('${a.id}', this.checked)"
+             aria-label="Επιλογή: ${escapeHtml(a.name)}">
       <div class="addr-info">
         <div class="addr-name">${escapeHtml(a.name)}</div>
         <div class="addr-address">${escapeHtml(a.address)}</div>
