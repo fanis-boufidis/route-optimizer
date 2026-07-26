@@ -968,6 +968,7 @@ function viewHistoryRoute(id) {
   const h = loadHistory().find(x => x.id === id);
   if (!h) return;
 
+  resultReturnTab = 'history';
   openResult();
 
   const mapsBtn = h.mapsUrl
@@ -1522,6 +1523,8 @@ function updateFooterBar() {
 }
 
 // ---------- Δημιουργία βέλτιστης διαδρομής (Google Routes API) ----------
+let resultReturnTab = 'list'; // από πού ανοίχτηκε το result panel
+
 function openResult() {
   document.getElementById('panel-result').classList.add('active');
   if (isDesktopLayout()) {
@@ -1532,11 +1535,28 @@ function openResult() {
 
 function closeResult() {
   document.getElementById('panel-result').classList.remove('active');
+  const returnTab = resultReturnTab || 'list';
+  resultReturnTab = 'list'; // reset για την επόμενη φορά
+
   if (isDesktopLayout()) {
     closeDesktopPanel();
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const listBtn = document.querySelector('.tab-btn[data-tab="list"]');
-    if (listBtn) listBtn.classList.add('active');
+    if (returnTab === 'history') {
+      const histBtn = document.querySelector('.tab-btn[data-tab="history"]');
+      if (histBtn) histBtn.classList.add('active');
+      openDesktopPanel('history');
+      renderHistory();
+    } else {
+      const listBtn = document.querySelector('.tab-btn[data-tab="list"]');
+      if (listBtn) listBtn.classList.add('active');
+    }
+  } else {
+    // Mobile
+    if (returnTab === 'history') {
+      document.querySelector('.tab-btn[data-tab="history"]').click();
+    } else {
+      document.querySelector('.tab-btn[data-tab="list"]').click();
+    }
   }
 }
 
@@ -1608,6 +1628,7 @@ async function generateRoute() {
     return;
   }
 
+  resultReturnTab = 'list';
   openResult();
   renderResultState(`
     <div class="state-box">
