@@ -309,7 +309,7 @@
   <div class="modal-box">
     <p id="confirm-message"></p>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="resolveConfirm(false)">Άκυρο</button>
+      <button class="btn-secondary" id="confirm-cancel-btn" onclick="resolveConfirm(false)">Άκυρο</button>
       <button class="primary" id="confirm-ok-btn" style="margin-top:0;" onclick="resolveConfirm(true)">Επιβεβαίωση</button>
     </div>
   </div>
@@ -1094,11 +1094,12 @@ function renderStatsGrid() {
 // ---------- Custom confirm modal (αντί για native confirm()) ----------
 let resolveConfirmFn = null;
 
-function showConfirm(message, confirmLabel) {
+function showConfirm(message, confirmLabel, alertOnly) {
   return new Promise(resolve => {
     resolveConfirmFn = resolve;
     document.getElementById('confirm-message').textContent = message;
     document.getElementById('confirm-ok-btn').textContent = confirmLabel || 'Επιβεβαίωση';
+    document.getElementById('confirm-cancel-btn').style.display = alertOnly ? 'none' : '';
     document.getElementById('confirm-modal').classList.add('visible');
   });
 }
@@ -1626,6 +1627,39 @@ async function generateRoute() {
   if (selected.length === 0) {
     showToast('Επίλεξε τουλάχιστον 1 διεύθυνση');
     return;
+  }
+
+  // --- Έλεγχος ορίων waypoints ---
+  // 1) Routes API: μέγιστο 25 ενδιάμεσα (μία είσοδος ανά στάση μπαίνει στον optimizer)
+  const ROUTES_API_MAX_INTERMEDIATES = 25;
+  if (selected.length > ROUTES_API_MAX_INTERMEDIATES) {
+    await showConfirm(
+      'Έχεις επιλέξει ' + selected.length + ' διευθύνσεις. Το Google επιτρέπει έως ' +
+      ROUTES_API_MAX_INTERMEDIATES + ' στάσεις ανά διαδρομή. Ξεδιάλεξε μερικές και ξαναδοκίμασε.',
+      'Εντάξει', true
+    );
+    return;
+  }
+
+  // 2) Google Maps deep link: κάθε στάση παράγει είσοδο + ενδιάμεσα + έξοδο.
+  //    Πρακτικό όριο ~25 waypoints συνολικά (εκτός origin/destination).
+  const MAPS_URL_MAX_WAYPOINTS = 25;
+  let totalWaypoints = 0;
+  selected.forEach(a => {
+    totalWaypoints += 1; // είσοδος
+    if (Array.isArray(a.midPoints)) totalWaypoints += a.midPoints.length;
+    else if (a.midLat != null && a.midLng != null) totalWaypoints += 1;
+    if (a.exitLat != null && a.exitLng != null) totalWaypoints += 1;
+  });
+
+  if (totalWaypoints > MAPS_URL_MAX_WAYPOINTS) {
+    const proceed = await showConfirm(
+      'Οι στάσεις σου με τα σημεία εισόδου/ενδιάμεσα/εξόδου παράγουν ' + totalWaypoints +
+      ' σημεία, ενώ το Google Maps υποστηρίζει έως ~' + MAPS_URL_MAX_WAYPOINTS +
+      '. Η βέλτιστη σειρά θα υπολογιστεί κανονικά, αλλά το άνοιγμα στο Google Maps ίσως κόψει κάποια σημεία. Να συνεχίσω;',
+      'Συνέχεια'
+    );
+    if (!proceed) return;
   }
 
   resultReturnTab = 'list';
