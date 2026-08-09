@@ -2266,15 +2266,37 @@ if (window.fb) {
 }
 
 // ---------- Ανίχνευση σύνδεσης (online/offline) ----------
-function updateOnlineStatus() {
-  const banner = document.getElementById('offline-banner');
-  if (!banner) return;
-  if (navigator.onLine) {
-    banner.classList.remove('visible');
-  } else {
-    banner.classList.add('visible');
+// Το navigator.onLine είναι αναξιόπιστο σε κινητά/PWA (συχνά δείχνει false ενώ υπάρχει σύνδεση).
+// Γι' αυτό επιβεβαιώνουμε με πραγματικό, ελαφρύ network probe πριν δείξουμε το banner.
+let offlineConfirmCount = 0;
+
+async function reallyOffline() {
+  // Αν το API λέει ότι είμαστε online, το εμπιστευόμαστε (false positives προς τα "online" είναι σπάνια)
+  if (navigator.onLine) return false;
+  // Αν λέει offline, επιβεβαιώνουμε με πραγματικό request (μπορεί να ψεύδεται)
+  try {
+    await fetch('https://www.gstatic.com/generate_204', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+    return false; // πέρασε → έχουμε σύνδεση
+  } catch (e) {
+    return true; // απέτυχε → πράγματι offline
   }
 }
+
+async function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+
+  const offline = await reallyOffline();
+  if (offline) {
+    // Απαιτούμε 2 συνεχόμενες αποτυχίες πριν δείξουμε το banner (αποφυγή ψευδών ειδοποιήσεων)
+    offlineConfirmCount++;
+    if (offlineConfirmCount >= 2) banner.classList.add('visible');
+  } else {
+    offlineConfirmCount = 0;
+    banner.classList.remove('visible');
+  }
+}
+
 window.addEventListener('online', () => {
   updateOnlineStatus();
   showToast('Επανήλθε η σύνδεση — συγχρονισμός…');
@@ -2282,7 +2304,9 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
   updateOnlineStatus();
 });
+// Αρχικός έλεγχος + περιοδική επαλήθευση κάθε 20 δευτ.
 updateOnlineStatus();
+setInterval(updateOnlineStatus, 20000);
 
 // ---------- Service Worker ----------
 if ('serviceWorker' in navigator) {
