@@ -82,7 +82,7 @@
 <!-- ==================== TAB: ΛΙΣΤΑ ==================== -->
 <div class="panel active" id="panel-list">
   <div id="base-badge"></div>
-  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα…" oninput="debouncedSearch()" aria-label="Αναζήτηση διευθύνσεων με όνομα" style="margin-bottom:10px;">
+  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα ή διεύθυνση…" oninput="debouncedSearch()" aria-label="Αναζήτηση διευθύνσεων με όνομα" style="margin-bottom:10px;">
   <div class="filter-row">
     <button id="sort-toggle-btn" class="filter-toggle" onclick="toggleSortMode()">Επιλεγμένα πρώτα</button>
     <button class="filter-toggle" onclick="selectAllVisible()">Επιλογή Όλων</button>
@@ -1880,7 +1880,7 @@ let sortSelectedFirst = localStorage.getItem('sort_selected_first') === 'true';
 function selectAllVisible() {
   const query = normalizeGreek((document.getElementById('search-input').value || '').trim());
   const visible = query
-    ? loadAddresses().filter(a => normalizeGreek(a.name).includes(query))
+    ? loadAddresses().filter(a => normalizeGreek(a.name).includes(query) || normalizeGreek(a.address || '').includes(query))
     : loadAddresses();
   visible.forEach(a => selectedIds.add(a.id));
   saveSelection(selectedIds);
@@ -1920,7 +1920,7 @@ function renderList() {
   const allAddresses = loadAddresses();
   const query = normalizeGreek((document.getElementById('search-input').value || '').trim());
   let addresses = query
-    ? allAddresses.filter(a => normalizeGreek(a.name).includes(query))
+    ? allAddresses.filter(a => normalizeGreek(a.name).includes(query) || normalizeGreek(a.address || '').includes(query))
     : allAddresses.slice();
 
   if (sortSelectedFirst) {
