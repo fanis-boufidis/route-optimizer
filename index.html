@@ -119,7 +119,7 @@
       <span>Ρυθμίσεις</span>
       <div class="edit-banner-actions">
         <button class="save-link" id="settings-save-btn" onclick="saveAllSettings()">Αποθήκευση</button>
-        <button onclick="closeRightPanel()">Άκυρο</button>
+        <button onclick="closeRightPanel(true)">Άκυρο</button>
       </div>
     </div>
     <div class="card">
@@ -165,7 +165,7 @@
   <div class="panel" id="panel-import">
     <div class="edit-banner">
       <span>Import Διευθύνσεων</span>
-      <button onclick="closeRightPanel()">Άκυρο</button>
+      <button onclick="closeRightPanel(true)">Άκυρο</button>
     </div>
     <div class="card">
       <label>Import από Excel (.xlsx / .xls / .csv)</label>
@@ -197,7 +197,7 @@
   <div class="panel" id="panel-history">
     <div class="edit-banner">
       <span>Ιστορικό Διαδρομών</span>
-      <button onclick="closeRightPanel()">Άκυρο</button>
+      <button onclick="closeRightPanel(true)">Άκυρο</button>
     </div>
     <div id="stats-grid" class="stats-grid"></div>
 
@@ -215,7 +215,7 @@
   <div class="panel" id="panel-account">
     <div class="edit-banner">
       <span>Λογαριασμός</span>
-      <button onclick="closeRightPanel()">Άκυρο</button>
+      <button onclick="closeRightPanel(true)">Άκυρο</button>
     </div>
     <div class="card">
       <label>Συνδεδεμένος ως</label>
@@ -512,8 +512,22 @@ function closeDesktopPanel() {
 
 // Κλείνει ό,τι είναι ανοιχτό δεξιά (desktop) ή γυρνάει στη Λίστα (mobile).
 // Χρησιμοποιείται από τα κουμπιά "Άκυρο" σε Ρυθμίσεις/Import/Ιστορικό/Προσθήκη.
-function closeRightPanel() {
-  if (!checkUnsavedAndWarn()) return;
+async function closeRightPanel(force) {
+  // Αν πατήθηκε "Άκυρο" (force) και υπάρχουν μη αποθηκευμένες αλλαγές, ρώτα επιβεβαίωση
+  // αντί να μπλοκάρεις — ο χρήστης ΘΕΛΕΙ να φύγει χωρίς αποθήκευση.
+  if (force) {
+    const dirty = (currentOpenPanelName() === 'add' && formDirty) ||
+                  (currentOpenPanelName() === 'settings' && settingsDirty);
+    if (dirty) {
+      const discard = await showConfirm('Έχεις μη αποθηκευμένες αλλαγές. Να τις απορρίψεις;', 'Απόρριψη');
+      if (!discard) return;
+    }
+    // Καθάρισε τα dirty flags ώστε να μη ξαναμπλοκάρει
+    formDirty = false;
+    settingsDirty = false;
+  } else {
+    if (!checkUnsavedAndWarn()) return;
+  }
 
   if (isDesktopLayout()) {
     closeDesktopPanel();
@@ -616,10 +630,11 @@ function editAddress(id) {
   }
 }
 
-function cancelEdit() {
+async function cancelEdit() {
   if (formDirty) {
-    shakeButton('address-save-btn');
-    return;
+    const discard = await showConfirm('Έχεις μη αποθηκευμένες αλλαγές. Να τις απορρίψεις;', 'Απόρριψη');
+    if (!discard) return;
+    formDirty = false;
   }
   editingId = null;
   fCoords = null;
