@@ -806,12 +806,13 @@ body:has(#footer-bar.visible) #toast.show {
 
 /* --- Google Places Autocomplete dropdown (dark theme override) --- */
 .pac-container {
-  z-index: 9999 !important;
+  z-index: 99999 !important;
   background: var(--surface-raised);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   font-family: var(--font);
   margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .pac-item {
   color: var(--text-secondary);
@@ -1562,4 +1563,16 @@ select:focus-visible,
 }
 @keyframes authSpin {
   to { transform: rotate(360deg); }
+}
+
+/* Mobile fix: εξασφάλιση ότι το Places dropdown δέχεται αγγίγματα και δεν κόβεται */
+@media (max-width: 899px) {
+  .pac-container {
+    width: auto !important;
+    max-width: calc(100vw - 32px);
+  }
+  .pac-item {
+    padding: 14px 12px; /* μεγαλύτερη περιοχή αφής */
+    touch-action: manipulation;
+  }
 }
