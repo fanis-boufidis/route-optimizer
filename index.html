@@ -125,10 +125,14 @@
     <div class="card">
       <label>Διεύθυνση Βάσης / Αφετηρίας *</label>
       <input type="text" id="base-address" placeholder="π.χ. Εγνατία 1, Θεσσαλονίκη" autocomplete="off" oninput="markSettingsDirty()">
-      <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
-      <div id="base-map" class="map-picker"></div>
-      <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
-      <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
+      <div class="map-field-group">
+        <div class="mfg-map"><div id="base-map" class="map-picker"></div></div>
+        <div class="mfg-fields">
+          <input type="text" class="coord-display" id="base-map-coords" placeholder="lat, lng" onchange="applyCoordInput('base-map')" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <p class="map-picker-hint" id="base-map-hint" style="display:none;">Σύρε την πινέζα στην ακριβή είσοδο/έξοδο.</p>
+          <p class="hint">Εδώ θα ξεκινάει και θα επιστρέφει η καθημερινή διαδρομή σου.</p>
+        </div>
+      </div>
     </div>
     <div class="card">
       <label>Εμφάνιση</label>
