@@ -77,7 +77,7 @@
 <!-- ==================== TAB: ΛΙΣΤΑ ==================== -->
 <div class="panel active" id="panel-list">
   <div id="base-badge"></div>
-  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα…" oninput="renderList()" aria-label="Αναζήτηση διευθύνσεων με όνομα" style="margin-bottom:10px;">
+  <input type="text" id="search-input" placeholder="Αναζήτηση με όνομα…" oninput="debouncedSearch()" aria-label="Αναζήτηση διευθύνσεων με όνομα" style="margin-bottom:10px;">
   <div class="filter-row">
     <button id="sort-toggle-btn" class="filter-toggle" onclick="toggleSortMode()">Επιλεγμένα πρώτα</button>
     <button class="filter-toggle" onclick="selectAllVisible()">Επιλογή Όλων</button>
@@ -423,18 +423,27 @@ function icon(name, size) {
   return `<span class="icon icon-${size}" aria-hidden="true">${ICONS[name]}</span>`;
 }
 
+let _addressesCache = null;
 function loadAddresses() {
+  if (_addressesCache !== null) return _addressesCache;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    _addressesCache = raw ? JSON.parse(raw) : [];
   } catch (e) {
     console.error('Σφάλμα ανάγνωσης localStorage:', e);
-    return [];
+    _addressesCache = [];
   }
+  return _addressesCache;
 }
 
 function saveAddresses(addresses) {
+  _addressesCache = addresses;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses));
+}
+
+// Ακύρωση cache όταν αλλάζουν τα δεδομένα εξωτερικά (π.χ. cloud sync, restore)
+function invalidateAddressesCache() {
+  _addressesCache = null;
 }
 
 function showToast(msg) {
@@ -1938,9 +1947,19 @@ function renderList() {
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+let searchDebounceTimer = null;
+function debouncedSearch() {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(renderList, 180);
 }
 
 // ========================================================================
@@ -1976,9 +1995,11 @@ function applyCloudData(data) {
   if (!data) return;
   SYNCED_KEYS.forEach(k => {
     if (data[k] !== undefined && data[k] !== null) {
-      localStorage.setItem(k, data[k]);
+      // _origSetItem: γράφει ΧΩΡΙΣ να πυροδοτεί ξανά cloud sync (αποφυγή echo loop)
+      _origSetItem(k, data[k]);
     }
   });
+  invalidateAddressesCache();
 }
 
 let syncTimer = null;
